@@ -6,6 +6,7 @@ local posix = require('posix')
 local cjson = require("cjson")
 local syslog = require("syslog")
 local conf = require 'wifi-portal.conf'
+local util = require 'wifi-portal.util'
 
 local ARGV = arg
 local only_show_conf
@@ -14,7 +15,7 @@ local mgr = evmg.init()
 
 local function logger(...)
 	local opt = syslog.LOG_ODELAY
-	if log_to_stderr then
+	if conf.log_to_stderr then
 		opt = opt + syslog.LOG_PERROR 
 	end
 	syslog.openlog("wifi-portal", opt, "LOG_USER")
@@ -82,6 +83,8 @@ local function main()
 		loop:unloop()
 	end, ev.SIGINT):start(loop)
 
+	util.add_trusted_ip(conf.authserv_hostname)
+	
 	mgr:bind(conf.gw_port, ev_handle, {proto = "http"})
 
 	logger("LOG_INFO", "start...")

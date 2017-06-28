@@ -44,3 +44,9 @@ function arp_get_mac(ifname, ip)
 
 	return nil
 end
+
+function add_trusted_ip(ip)
+	local file = io.open("/proc/wifidog/trusted_ip", "w+")
+	file:write("+", ip, "\n")
+	file:close()
+end

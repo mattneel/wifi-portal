@@ -6,8 +6,13 @@ START=99
 BIN=/usr/sbin/wifi-portal
 
 start_service() {
+	echo enabled=1 > /proc/wifidog/config
 	procd_open_instance
 	procd_set_param command $BIN
 	procd_close_instance
+}
+
+stop_service() {
+	echo enabled=0 > /proc/wifidog/config
 }
 

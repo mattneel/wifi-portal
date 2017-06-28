@@ -1,7 +1,7 @@
 module(..., package.seeall)
 
 log_to_stderr = false
-ifname = "eth0"
+ifname = "br-lan"
 file = "/etc/wifi-portal.conf"
 gw_port = 2060
 authserv_hostname = "192.168.0.100"

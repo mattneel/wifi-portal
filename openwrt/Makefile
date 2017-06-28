@@ -35,10 +35,10 @@ define Build/Compile
 endef
 
 define Package/$(PKG_NAME)/install
-	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc/init.d $(1)/usr/lib/lua
+	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/init.d $(1)/usr/lib/lua
 	$(INSTALL_BIN) ./files/wifi-portal.init $(1)/etc/init.d/wifi-portal
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/luasrc/wifi-portal.lua $(1)/usr/sbin/wifi-portal
-	$(CP) (PKG_BUILD_DIR)/luasrc/wifi-portal $(1)/usr/lib/lua
+	$(CP) $(PKG_BUILD_DIR)/luasrc/wifi-portal $(1)/usr/lib/lua
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
