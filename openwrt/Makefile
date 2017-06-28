@@ -6,12 +6,11 @@ PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/zhaojh329/wifi-portal.git
-PKG_SOURCE_VERSION:=06476bae670f61f1b2f0a704c070ea3305c70364
+PKG_SOURCE_VERSION:=73e7778849e6ea41af0195e2275a1e8191a60530
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/kernel.mk
-include $(INCLUDE_DIR)/cmake.mk
 
 define Package/$(PKG_NAME)
   SUBMENU:=Captive Portals
@@ -32,14 +31,14 @@ endef
 include $(INCLUDE_DIR)/kernel-defaults.mk
 
 define Build/Compile
-	$(call Build/Compile/Default)
 	$(MAKE) $(KERNEL_MAKEOPTS) SUBDIRS="$(PKG_BUILD_DIR)"/kmod modules
 endef
 
 define Package/$(PKG_NAME)/install
-	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc/init.d
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wifi-portal $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc/init.d $(1)/usr/lib/lua
 	$(INSTALL_BIN) ./files/wifi-portal.init $(1)/etc/init.d/wifi-portal
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/wifi-portal.lua $(1)/usr/sbin/wifi-portal
+	$(CP) (PKG_BUILD_DIR)/src/wifi-portal $(1)/usr/lib/lua
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
