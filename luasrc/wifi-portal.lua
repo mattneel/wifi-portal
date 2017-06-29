@@ -63,8 +63,9 @@ local function ev_handle(nc, event, msg)
 		local uri = msg.uri
 
 		--Redirect them to auth server
+		logger("LOG_INFO", string.format("Redirect '%s'-----'%s'", msg.remote_addr, uri))
 		local authurl = string.format("http://%s:%d/wifidog/login?gw_address=%s&gw_port=%d&ip=%s&mac=%s", 
-			conf.authserv_hostname, conf.authserv_http_port, conf.gw_address, conf.gw_port, msg.remote_addr, util.arp_get_mac(conf.ifname, msg.remote_addr))
+			conf.authserv_hostname, conf.authserv_http_port, conf.gw_address, conf.gw_port, msg.remote_addr, util.arp_get_mac(conf.ifname, msg.remote_addr) or "ff:ff:ff:ff:ff:ff")
 		mgr:http_send_redirect(nc, 302, authurl)
 	end	
 end
@@ -86,6 +87,7 @@ local function main()
 	util.add_trusted_ip(conf.authserv_hostname)
 	
 	mgr:bind(conf.gw_port, ev_handle, {proto = "http"})
+	mgr:bind(conf.gw_ssl_port, ev_handle, {proto = "http", ssl_cert = "/etc/wifi-portal/server.pem", ssl_key = "/etc/wifi-portal/server.key"})
 
 	logger("LOG_INFO", "start...")
 	
