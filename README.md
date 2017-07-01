@@ -23,10 +23,12 @@ Feel free to create issues or pull-requests if you have any problems.
 before pushing any changes.**
 
 # Thanks for the following project
+* [evmongoose](https://github.com/zhaojh329/evmongoose)
 * [wifidog-gateway](https://github.com/wifidog/wifidog-gateway)
 * [apfree_wifidog](https://github.com/liudf0716/apfree_wifidog)
 * [mongoose](https://github.com/cesanta/mongoose)
 * [libev](https://github.com/kindy/libev)
+* [lua-ev](https://github.com/brimworks/lua-ev)
 
 # If the project is helpful to you, please do not hesitate to star. Thank you!
 

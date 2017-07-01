@@ -28,10 +28,12 @@ WiFi-Portal使用github托管其源代码，贡献代码使用github的PR(Pull R
 6. 等待review, 需要继续改进，或者被Merge!
 	
 ## 感谢以下项目提供帮助
+* [evmongoose](https://github.com/zhaojh329/evmongoose)
 * [wifidog-gateway](https://github.com/wifidog/wifidog-gateway)
 * [apfree_wifidog](https://github.com/liudf0716/apfree_wifidog)
 * [mongoose](https://github.com/cesanta/mongoose)
 * [libev](https://github.com/kindy/libev)
+* [lua-ev](https://github.com/brimworks/lua-ev)
 
 # 技术交流
 QQ群：153530783
