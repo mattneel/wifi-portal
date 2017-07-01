@@ -1,12 +1,13 @@
 #!/usr/bin/lua
 
-local ev = require("ev")
-local evmg = require("evmongoose")
-local posix = require('posix')
-local cjson = require("cjson")
-local syslog = require("syslog")
-local conf = require 'wifi-portal.conf'
-local util = require 'wifi-portal.util'
+local ev = require "ev"
+local evmg = require "evmongoose"
+local posix = require 'posix'
+local cjson = require "cjson"
+local syslog = require "syslog"
+local conf = require "wifi-portal.conf"
+local util = require "wifi-portal.util"
+local http = require "wifi-portal.http"
 
 local ARGV = arg
 local only_show_conf
@@ -60,14 +61,8 @@ end
 
 local function ev_handle(nc, event, msg)
 	if event == evmg.MG_EV_HTTP_REQUEST then
-		local uri = msg.uri
-
-		--Redirect them to auth server
-		logger("LOG_INFO", string.format("Redirect '%s'-----'%s'", msg.remote_addr, uri))
-		local authurl = string.format("http://%s:%d/wifidog/login?gw_address=%s&gw_port=%d&ip=%s&mac=%s", 
-			conf.authserv_hostname, conf.authserv_http_port, conf.gw_address, conf.gw_port, msg.remote_addr, util.arp_get_mac(conf.ifname, msg.remote_addr) or "ff:ff:ff:ff:ff:ff")
-		mgr:http_send_redirect(nc, 302, authurl)
-	end	
+		return http.dispach(mgr, nc, msg)
+	end
 end
 
 local function main()
@@ -75,8 +70,6 @@ local function main()
 	
 	parse_commandline()
 	conf.parse_conf()
-	conf.gw_id = util.get_iface_mac(conf.ifname)
-	conf.gw_address = util.get_iface_ip(conf.ifname)
 	
 	if only_show_conf then conf.show() end
 
@@ -87,9 +80,12 @@ local function main()
 	util.add_trusted_ip(conf.authserv_hostname)
 	
 	mgr:bind(conf.gw_port, ev_handle, {proto = "http"})
-	mgr:bind(conf.gw_ssl_port, ev_handle, {proto = "http", ssl_cert = "/etc/wifi-portal/server.pem", ssl_key = "/etc/wifi-portal/server.key"})
+	mgr:bind(conf.gw_ssl_port, ev_handle, {proto = "http", ssl_cert = "/etc/wifi-portal/wp.crt", ssl_key = "/etc/wifi-portal/wp.key"})
 
 	logger("LOG_INFO", "start...")
+
+	logger("LOG_INFO", "Listen on http " .. conf.gw_port)
+	logger("LOG_INFO", "Listen on https " .. conf.gw_ssl_port)
 	
 	loop:loop()
 	mgr:destroy()
@@ -98,3 +94,4 @@ local function main()
 end
 
 main()
+

@@ -46,7 +46,13 @@ function arp_get_mac(ifname, ip)
 end
 
 function add_trusted_ip(ip)
-	local file = io.open("/proc/wifidog/trusted_ip", "w+")
+	local file = io.open("/proc/wifidog/trusted_ip", "w")
 	file:write("+", ip, "\n")
+	file:close()
+end
+
+function add_trusted_mac(mac)
+	local file = io.open("/proc/wifidog/trusted_mac", "w")
+	file:write("+", mac, "\n")
 	file:close()
 end

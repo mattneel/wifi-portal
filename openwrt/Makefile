@@ -40,8 +40,8 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/luasrc/wifi-portal.lua $(1)/usr/sbin/wifi-portal
 	$(CP) $(PKG_BUILD_DIR)/luasrc/wifi-portal $(1)/usr/lib/lua
 
-	$(CP) ./files/server.key $(1)/etc/wifi-portal
-	$(CP) ./files/server.pem $(1)/etc/wifi-portal
+	$(CP) ./files/wp.crt $(1)/etc/wifi-portal
+	$(CP) ./files/wp.pem $(1)/etc/wifi-portal
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
