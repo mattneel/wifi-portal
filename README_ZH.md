@@ -2,20 +2,21 @@
 
 ![](https://img.shields.io/badge/license-GPLV3-brightgreen.svg?style=plastic "License")
 
-WiFi-Portal是一个非常高效的portal认证解决方案。它参考了wifidog和apfree_wifidog，
+WiFi-Portal是一个使用Lua语言编写的非常高效的portal认证解决方案。它参考了wifidog和apfree_wifidog，
 是一个全新的portal认证解决方案，代码简洁，框架清晰。与wifidog和apfree_wifidog
 不同的是，wifi-portal通过编写内核模块实现认证管理，而不是通过iptables创建防火墙规则。
 
 ## 特性:
-* 采用高效的事件库libev
+* 使用Lua语言编写
+* 基于[evmongoose](https://github.com/zhaojh329/evmongoose)(mongoose, libev, lua-ev)
+* 单线程，全异步
 * 通过编写内核模块实现认证管理，而不是通过iptables创建防火墙规则
 * 支持HTTPS
 * SSL库可以选择openssl或者mbedtls
-* 支持远程控制和配置
 
 # 贡献代码
 
-Evmongoose使用github托管其源代码，贡献代码使用github的PR(Pull Request)的流程，十分的强大与便利:
+WiFi-Portal使用github托管其源代码，贡献代码使用github的PR(Pull Request)的流程，十分的强大与便利:
 
 1. [创建 Issue](https://github.com/zhaojh329/wifi-portal/issues/new) - 对于较大的
 	改动(如新功能，大型重构等)最好先开issue讨论一下，较小的improvement(如文档改进，bugfix等)直接发PR即可

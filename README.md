@@ -3,17 +3,18 @@
 ![](https://img.shields.io/badge/license-GPLV3-brightgreen.svg?style=plastic "License")
 
 WiFi-Portal is a very efficient captive portal solution for wireless
-router which with embeded linux(LEDE/Openwrt) system. It's referenced wifidog
-and apfree_wifidog, and it's a whole new one captive portal solution. Unlike
+router which with embedded linux(LEDE/Openwrt) system and it's using the Lua language. 
+It's referenced wifidog and apfree_wifidog, and it's a whole new one captive portal solution. Unlike
 wifidog and apfree_wifidog, wifi-portal does write kernel module to implement
 authentication management instead of using iptables to create firewall rules.
 
 ## features:
-* Use libev
-* Write kernel module to implement authentication management instead of using iptables to create firewall rules
+* using the Lua language
+* Based on [evmongoose](https://github.com/zhaojh329/evmongoose)(mongoose, libev, lua-ev)
+* Single threaded, fully asynchronous
+* Writing kernel module to implement authentication management instead of using iptables to create firewall rules
 * Support HTTPS
 * Alternative openssl and mbedtls
-* Support remote control and configure
 
 # How To Contribute
 Feel free to create issues or pull-requests if you have any problems.
