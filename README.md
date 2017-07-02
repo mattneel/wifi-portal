@@ -23,6 +23,7 @@ authentication management instead of using iptables to create firewall rules.
 	sudo cp -r wifi-portal/authserver/nginx/sites-available /etc/nginx
 	sudo ln -s /etc/nginx/sites-available/wifidog /etc/nginx/sites-enabled/wifidog
 	sudo cp -r wifi-portal/authserver/www/wifidog /var/www/
+	sudo nginx -s reload
 	
 ## Modify config of Auth Server(/etc/nginx/sites-available/wifidog)
 

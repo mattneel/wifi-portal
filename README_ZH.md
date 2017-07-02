@@ -21,6 +21,7 @@ WiFi-Portal是一个使用Lua语言编写的非常高效的portal认证解决方
 	sudo cp -r wifi-portal/authserver/nginx/sites-available /etc/nginx
 	sudo ln -s /etc/nginx/sites-available/wifidog /etc/nginx/sites-enabled/wifidog
 	sudo cp -r wifi-portal/authserver/www/wifidog /var/www/
+	sudo nginx -s reload
 	
 ## 修改认证服务器配置(/etc/nginx/sites-available/wifidog)
 
