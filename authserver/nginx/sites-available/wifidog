@@ -12,7 +12,10 @@ server {
 			local log = ngx.log
 			local path_fragment = ngx.var.uri:match("/wifidog/(%a+)")
 
-			if path_fragment == "login" then
+			if path_fragment == "ping" then
+				return ngx.say("Pong")
+
+			elseif path_fragment == "login" then
 				if ngx.var.request_method == "GET" then
 					return ngx.redirect("/login.html?" .. ngx.var.args)
 				else

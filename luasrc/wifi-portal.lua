@@ -56,6 +56,15 @@ local function ev_handle(nc, event, msg)
 	end
 end
 
+local function init_log()
+	local option = log.syslog.LOG_ODELAY
+
+	if conf.log_to_stderr then
+		option = option + log.syslog.LOG_PERROR 
+	end
+	log.open("wifi-portal", option, log.syslog.LOG_USER)
+end
+
 local function main()
 	local loop = ev.Loop.default
 	
@@ -63,6 +72,8 @@ local function main()
 	conf.parse_conf()
 	
 	if only_show_conf then conf.show() end
+
+	init_log()
 
 	ev.Signal.new(function(loop, sig, revents)
 		loop:unloop()
@@ -73,16 +84,18 @@ local function main()
 	mgr:bind(conf.gw_port, ev_handle, {proto = "http"})
 	mgr:bind(conf.gw_ssl_port, ev_handle, {proto = "http", ssl_cert = "/etc/wifi-portal/wp.crt", ssl_key = "/etc/wifi-portal/wp.key"})
 
-	ping.start()
+	ping.start(mgr, loop)
 
 	log.info("start...")
 	log.info("Listen on http:", conf.gw_port)
 	log.info("Listen on https:", conf.gw_ssl_port)
 	
 	loop:loop()
-	mgr:destroy()
-
+	
+	mgr:destroy()	
 	log.info("exit...")
+
+	log.close()
 end
 
 main()

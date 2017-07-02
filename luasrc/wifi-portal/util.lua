@@ -56,3 +56,9 @@ function add_trusted_mac(mac)
 	file:write("+", mac, "\n")
 	file:close()
 end
+
+function mark_auth_online()
+end
+
+function mark_auth_offline()
+end

@@ -1,45 +1,46 @@
 module(..., package.seeall)
 
-local syslog = require "syslog"
+local evmg = require "evmongoose"
 local conf = require "wifi-portal.conf"
+syslog = evmg.syslog
 
-function logger(level, ...)
-	local opt = syslog.LOG_ODELAY
+function open(ident, option, facility)
+	syslog.openlog(ident, option, facility)
+end
 
-	if conf.log_to_stderr then
-		opt = opt + syslog.LOG_PERROR 
-	end
-	
-	syslog.openlog("wifi-portal", opt, "LOG_USER")
-	syslog.syslog(level, table.concat({...}, "\t"))
+function close()
 	syslog.closelog()
 end
 
+function logger(level, ...)
+	syslog.syslog(level, table.concat({...}, "\t"))
+end
+
 function info(...)
-	logger("LOG_INFO", ...)
+	logger(syslog.LOG_INFO, ...)
 end
 
 function notice(...)
-	logger("LOG_NOTICE", ...)
+	logger(syslog.LOG_NOTICE, ...)
 end
 
 function warning(...)
-	logger("LOG_WARNING", ...)
+	logger(syslog.LOG_WARNING, ...)
 end
 
 function error(...)
-	logger("LOG_ERR", ...)
+	logger(syslog.LOG_ERR, ...)
 end
 
 function crit(...)
-	logger("LOG_CRIT", ...)
+	logger(syslog.LOG_CRIT, ...)
 end
 
 function alert(...)
-	logger("LOG_ALERT", ...)
+	logger(syslog.LOG_ALERT, ...)
 end
 
 function emerg(...)
-	logger("LOG_EMERG", ...)
+	logger(syslog.LOG_EMERG, ...)
 end
 

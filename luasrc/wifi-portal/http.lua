@@ -32,7 +32,14 @@ function http_callback_auth(mgr, nc, msg)
 
 	local mac = util.arp_get_mac(conf.ifname, msg.remote_addr)
 	mgr:connect_http(string.format(conf.authserv_auth_url, msg.remote_addr, mac, token), function(nc2, event, msg2)
-		if event == evmg.MG_EV_HTTP_REPLY then
+		if event == evmg.MG_EV_CONNECT then
+			if msg.connected then
+				util.mark_auth_online()
+			else
+				util.mark_auth_offline()
+				log.info("auth server offline:", msg.err)
+			end
+		elseif event == evmg.MG_EV_HTTP_REPLY then
 			mgr:set_connection_flags(nc2, evmg.MG_F_CLOSE_IMMEDIATELY)
 
 			local authcode = msg2.body:match("Auth: (%d)")
