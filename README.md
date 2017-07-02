@@ -16,6 +16,37 @@ authentication management instead of using iptables to create firewall rules.
 * Support HTTPS
 * Alternative openssl and mbedtls
 
+# How to use
+## Install Auth Server Demo for WiFi-portal on Ubuntu
+	sudo apt install nginx nginx-extras
+	git clone https://github.com/zhaojh329/wifi-portal.git
+	sudo cp -r wifi-portal/authserver/nginx/sites-available /etc/nginx
+	sudo ln -s /etc/nginx/sites-available/wifidog /etc/nginx/sites-enabled/wifidog
+	sudo cp -r wifi-portal/authserver/www/wifidog /var/www/
+	
+## Modify config of Auth Server(/etc/nginx/sites-available/wifidog)
+
+## Install WiFi-Portal on OpenWRT/LEDE
+	git clone https://github.com/zhaojh329/lua-ev-openwrt.git
+	cp -r lua-ev-openwrt openwrt_dir/package/lua-ev
+	
+	git clone https://github.com/zhaojh329/evmongoose.git
+	cp -r evmongoose/openwrt openwrt_dir/package/evmongoose
+	
+	git clone https://github.com/zhaojh329/wifi-portal.git
+	cp -r wifi-portal/openwrt openwrt_dir/package/wifi-portal
+	
+	cd openwrt_dir
+	./scripts/feeds update -a
+	./scripts/feeds install -a
+	
+	make menuconfig
+	Network  --->
+		Captive Portals  --->
+			<*> wifi-portal
+			
+	make package/wifi-portal/compile V=s
+
 # How To Contribute
 Feel free to create issues or pull-requests if you have any problems.
 

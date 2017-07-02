@@ -1,13 +1,18 @@
 server {
 	listen 8900;
+	error_log  /var/log/nginx/wifidog.error.log error;
+	access_log /var/log/nginx/wifidog.access.log;
 	
-	root /home/zjh/www;
+	root /var/www/wifidog;
 
 	location ^~ /wifidog/ {
 		default_type  text/html;
 
 		content_by_lua_block {
-			if ngx.var.uri == "/wifidog/login" then
+			local log = ngx.log
+			local path_fragment = ngx.var.uri:match("/wifidog/(%a+)")
+
+			if path_fragment == "login" then
 				if ngx.var.request_method == "GET" then
 					return ngx.redirect("/login.html?" .. ngx.var.args)
 				else
@@ -19,12 +24,18 @@ server {
 					local uri = string.format("http://%s:%s/wifidog/auth?token=%s", gw_address, gw_port, token)
 					return ngx.redirect(uri)
 				end
-			elseif ngx.var.uri == "/wifidog/auth" then
+
+			elseif path_fragment == "auth" then
 				return ngx.say("Auth: 1")
-			elseif ngx.var.uri == "/wifidog/portal" then
+
+			elseif path_fragment == "portal" then
 				return ngx.redirect("/portal.html")
-			elseif ngx.var.uri == "/wifidog/gw_message" then
+
+			elseif path_fragment == "gw_message" then
 				return ngx.redirect("/deny.html")
+
+			else
+				return ngx.say("Invalid path")
 			end
 		}
 	}

@@ -14,6 +14,37 @@ WiFi-Portal是一个使用Lua语言编写的非常高效的portal认证解决方
 * 支持HTTPS
 * SSL库可以选择openssl或者mbedtls
 
+# 如何使用
+## 在Ubuntu上安装最简单的认证服务器
+	sudo apt install nginx nginx-extras
+	git clone https://github.com/zhaojh329/wifi-portal.git
+	sudo cp -r wifi-portal/authserver/nginx/sites-available /etc/nginx
+	sudo ln -s /etc/nginx/sites-available/wifidog /etc/nginx/sites-enabled/wifidog
+	sudo cp -r wifi-portal/authserver/www/wifidog /var/www/
+	
+## 修改认证服务器配置(/etc/nginx/sites-available/wifidog)
+
+## 安装WiFi-Portal到OpenWRT/LEDE
+	git clone https://github.com/zhaojh329/lua-ev-openwrt.git
+	cp -r lua-ev-openwrt openwrt_dir/package/lua-ev
+	
+	git clone https://github.com/zhaojh329/evmongoose.git
+	cp -r evmongoose/openwrt openwrt_dir/package/evmongoose
+	
+	git clone https://github.com/zhaojh329/wifi-portal.git
+	cp -r wifi-portal/openwrt openwrt_dir/package/wifi-portal
+	
+	cd openwrt_dir
+	./scripts/feeds update -a
+	./scripts/feeds install -a
+	
+	make menuconfig
+	Network  --->
+		Captive Portals  --->
+			<*> wifi-portal
+			
+	make package/wifi-portal/compile V=s
+
 # 贡献代码
 
 WiFi-Portal使用github托管其源代码，贡献代码使用github的PR(Pull Request)的流程，十分的强大与便利:
