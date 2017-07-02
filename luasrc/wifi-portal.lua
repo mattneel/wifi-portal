@@ -4,25 +4,16 @@ local ev = require "ev"
 local evmg = require "evmongoose"
 local posix = require 'posix'
 local cjson = require "cjson"
-local syslog = require "syslog"
+local log = require "wifi-portal.log"
 local conf = require "wifi-portal.conf"
 local util = require "wifi-portal.util"
 local http = require "wifi-portal.http"
+local ping = require "wifi-portal.ping"
 
 local ARGV = arg
 local only_show_conf
 
 local mgr = evmg.init()
-
-local function logger(...)
-	local opt = syslog.LOG_ODELAY
-	if conf.log_to_stderr then
-		opt = opt + syslog.LOG_PERROR 
-	end
-	syslog.openlog("wifi-portal", opt, "LOG_USER")
-	syslog.syslog(...)
-	syslog.closelog()
-end
 
 function usage()
 	print("Usage:", ARGV[0], "options")
@@ -82,15 +73,16 @@ local function main()
 	mgr:bind(conf.gw_port, ev_handle, {proto = "http"})
 	mgr:bind(conf.gw_ssl_port, ev_handle, {proto = "http", ssl_cert = "/etc/wifi-portal/wp.crt", ssl_key = "/etc/wifi-portal/wp.key"})
 
-	logger("LOG_INFO", "start...")
+	ping.start()
 
-	logger("LOG_INFO", "Listen on http " .. conf.gw_port)
-	logger("LOG_INFO", "Listen on https " .. conf.gw_ssl_port)
+	log.info("start...")
+	log.info("Listen on http:", conf.gw_port)
+	log.info("Listen on https:", conf.gw_ssl_port)
 	
 	loop:loop()
 	mgr:destroy()
 
-	logger("LOG_INFO", "exit...")
+	log.info("exit...")
 end
 
 main()

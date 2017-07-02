@@ -1,6 +1,7 @@
 module(..., package.seeall)
 
 local evmg = require "evmongoose"
+local log = require "wifi-portal.log"
 local conf = require "wifi-portal.conf"
 local util = require "wifi-portal.util"
 
@@ -50,6 +51,19 @@ end
 
 function dispach(mgr, nc, msg)
 	local uri = msg.uri
+
+--[[
+	log.info("--------------dispach-----------------------")
+	log.info("method:", msg.method)
+	log.info("uri:", msg.uri)
+	log.info("proto:", msg.proto)
+	log.info("remote_addr:", msg.remote_addr)
+
+	for k, v in pairs(msg.headers) do
+		log.info(k, ":", v)
+	end
+--]]
+
 	if uri == "/wifidog/auth" then
 		http_callback_auth(mgr, nc, msg)
 		return true
