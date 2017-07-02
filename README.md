@@ -11,7 +11,7 @@ authentication management instead of using iptables to create firewall rules.
 ## features:
 * using the Lua language
 * Based on [evmongoose](https://github.com/zhaojh329/evmongoose)(mongoose, libev, lua-ev)
-* Single threaded, fully asynchronous
+* Single threaded, Fully asynchronous, No blocking operation at all
 * Writing kernel module to implement authentication management instead of using iptables to create firewall rules
 * Support HTTPS
 * Alternative openssl and mbedtls

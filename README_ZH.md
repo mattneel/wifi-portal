@@ -9,7 +9,7 @@ WiFi-Portal是一个使用Lua语言编写的非常高效的portal认证解决方
 ## 特性:
 * 使用Lua语言编写
 * 基于[evmongoose](https://github.com/zhaojh329/evmongoose)(mongoose, libev, lua-ev)
-* 单线程，全异步
+* 单线程，全异步，所有操作均采用异步编程实现
 * 通过编写内核模块实现认证管理，而不是通过iptables创建防火墙规则
 * 支持HTTPS
 * SSL库可以选择openssl或者mbedtls
