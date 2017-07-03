@@ -41,7 +41,7 @@ define Package/$(PKG_NAME)/install
 	$(CP) $(PKG_BUILD_DIR)/luasrc/wifi-portal $(1)/usr/lib/lua
 
 	$(CP) ./files/wp.crt $(1)/etc/wifi-portal
-	$(CP) ./files/wp.pem $(1)/etc/wifi-portal
+	$(CP) ./files/wp.key $(1)/etc/wifi-portal
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
