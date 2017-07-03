@@ -10,48 +10,31 @@ local http = require "wifi-portal.http"
 local ping = require "wifi-portal.ping"
 
 local ARGV = arg
-local only_show_conf
+local inspect_configuration
 
 local mgr = evmg.init()
 
 function usage()
-	print("Usage:", ARGV[0], "options")
+	print("Usage:", ARGV[0], "[options]")
 	print([[
-        -s              Only show config
+        -c file         Configuration file, default is '/etc/wp.conf'
+        -i              Inspect Configuration
         -d              Log to stderr
-        -i              default is eth0
-        -c              Config file path
 	]])
 	os.exit()
 end
 
-local function parse_commandline()
-	local longopt = {
-		{"help", nil, 'h'}
-	}
-	
-	for o, optarg, lo in util.getopt(ARGV, "hsdi:c:", longopt) do
-		if o == '?' or o == "h" then
-			usage()
-		end
-		
-		if o == "d" then
-			conf.log_to_stderr = true
-		elseif o == "i" then
-			conf.ifname = optarg
-		elseif o == "s" then
-			only_show_conf = true
-		elseif o == "c" then
+local function parse_commandline()	
+	for o, optarg, lo in util.getopt(ARGV, "hc:id", longopt) do
+		if o == "c" then
 			conf.file = optarg
+		elseif o == "i" then
+			inspect_configuration = true
+		elseif o == "d" then
+			conf.log_to_stderr = true
 		else
 			usage()
 		end
-	end
-end
-
-local function ev_handle(nc, event, msg)
-	if event == evmg.MG_EV_HTTP_REQUEST then
-		return http.dispach(mgr, nc, msg)
 	end
 end
 
@@ -70,7 +53,7 @@ local function main()
 	parse_commandline()
 	conf.parse_conf()
 	
-	if only_show_conf then conf.show() end
+	if inspect_configuration then conf.show() end
 
 	init_log()
 
@@ -80,14 +63,8 @@ local function main()
 
 	util.add_trusted_ip(conf.authserv_hostname)
 	
-	mgr:bind(conf.gw_port, ev_handle, {proto = "http"})
-	mgr:bind(conf.gw_ssl_port, ev_handle, {proto = "http", ssl_cert = "/etc/wifi-portal/wp.crt", ssl_key = "/etc/wifi-portal/wp.key"})
-
+	http.start(mgr)
 	ping.start(mgr, loop)
-
-	log.info("start...")
-	log.info("Listen on http:", conf.gw_port)
-	log.info("Listen on https:", conf.gw_ssl_port)
 	
 	loop:loop()
 	

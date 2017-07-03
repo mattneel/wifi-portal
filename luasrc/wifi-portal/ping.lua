@@ -14,9 +14,7 @@ local function ping_resp_cb(msg)
 	end
 end
 
-function start(mgr,  loop)
-	log.info("start ping...")
-	
+function start(mgr,  loop)	
 	ev.Timer.new(function(loop, timer, revents)
 		local sysinfo = util.ubus("system", "info")
 		local ping_url = string.format(conf.authserv_ping_url, sysinfo.uptime, sysinfo.memory.free, sysinfo.load[1], os.time() - conf.started_time)
@@ -35,4 +33,6 @@ function start(mgr,  loop)
 			end
 		end)
 	end, 0.1, conf.checkinterval):start(loop)
+
+	log.info("ping start...")
 end

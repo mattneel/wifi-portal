@@ -92,6 +92,9 @@ function getopt(args, optstring, longopts)
 			
 			i = i + 1
 			return o, optarg
+		else
+			i = i + 1
+			return "?"
 		end
 	end
 end

@@ -2,7 +2,7 @@ module(..., package.seeall)
 
 local util = require "wifi-portal.util"
 
-file = "/etc/wifi-portal.conf"
+file = "/etc/wp.conf"
 log_to_stderr = false
 ifname = "br-lan"
 gw_id = nil

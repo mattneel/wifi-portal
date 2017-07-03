@@ -33,7 +33,7 @@ function http_callback_auth(mgr, nc, msg)
 	local mac = util.arp_get_mac(conf.ifname, msg.remote_addr)
 	mgr:connect_http(string.format(conf.authserv_auth_url, msg.remote_addr, mac, token), function(nc2, event, msg2)
 		if event == evmg.MG_EV_CONNECT then
-			if msg.connected then
+			if msg2.connected then
 				util.mark_auth_online()
 			else
 				util.mark_auth_offline()
@@ -56,7 +56,7 @@ function http_callback_auth(mgr, nc, msg)
 	end)
 end
 
-function dispach(mgr, nc, msg)
+local function dispach(mgr, nc, msg)
 	local uri = msg.uri
 
 --[[
@@ -80,3 +80,19 @@ function dispach(mgr, nc, msg)
 	end
 end
 
+function start(mgr)
+	local function ev_handle(nc, event, msg)
+		if event == evmg.MG_EV_HTTP_REQUEST then
+			return dispach(mgr, nc, msg)
+		end
+	end
+
+	local opt = {proto = "http"}
+	mgr:bind(conf.gw_address .. ":" .. conf.gw_port, ev_handle, opt)
+
+	opt.ssl_cert = "/etc/wifi-portal/wp.crt"
+	opt.ssl_key = "/etc/wifi-portal/wp.key"
+	mgr:bind(conf.gw_address .. ":" .. conf.gw_ssl_port, ev_handle, opt)
+
+	log.info("http start...")
+end
