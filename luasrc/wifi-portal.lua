@@ -2,7 +2,6 @@
 
 local ev = require "ev"
 local evmg = require "evmongoose"
-local posix = require 'posix'
 local cjson = require "cjson"
 local log = require "wifi-portal.log"
 local conf = require "wifi-portal.conf"
@@ -27,22 +26,22 @@ function usage()
 end
 
 local function parse_commandline()
-	local long = {
-		{"help",  "none", 'h'}
+	local longopt = {
+		{"help", nil, 'h'}
 	}
 	
-	for r, optarg, optind, longindex in posix.getopt(ARGV, "hsdi:c:", long) do
-		if r == '?' or r == "h" then
+	for o, optarg, lo, in util.getopt(ARGV, "hsdi:c:", longopt) do
+		if o == '?' or o == "h" then
 			usage()
 		end
 		
-		if r == "d" then
+		if o == "d" then
 			conf.log_to_stderr = true
-		elseif r == "i" then
+		elseif o == "i" then
 			conf.ifname = optarg
-		elseif r == "s" then
+		elseif o == "s" then
 			only_show_conf = true
-		elseif r == "c" then
+		elseif o == "c" then
 			conf.file = optarg
 		else
 			usage()
