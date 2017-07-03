@@ -9,7 +9,8 @@ wifidog and apfree_wifidog, wifi-portal does write kernel module to implement
 authentication management instead of using iptables to create firewall rules.
 
 ## features:
-* using the Lua language
+* Compatible with original wifodog protocol
+* Using the Lua language - Easy to modify and debug
 * Based on [evmongoose](https://github.com/zhaojh329/evmongoose)(mongoose, libev, lua-ev)
 * Single threaded, Fully asynchronous, No blocking operation at all
 * Writing kernel module to implement authentication management instead of using iptables to create firewall rules
