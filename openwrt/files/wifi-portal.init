@@ -9,6 +9,7 @@ start_service() {
 	echo enabled=1 > /proc/wifidog/config
 	procd_open_instance
 	procd_set_param command $BIN
+	procd_set_param respawn
 	procd_close_instance
 }
 
