@@ -1,4 +1,4 @@
-Gmodule(..., package.seeall)
+module(..., package.seeall)
 
 local libubus = require "ubus"
 

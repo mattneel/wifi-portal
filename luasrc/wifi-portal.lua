@@ -30,7 +30,7 @@ local function parse_commandline()
 		{"help", nil, 'h'}
 	}
 	
-	for o, optarg, lo, in util.getopt(ARGV, "hsdi:c:", longopt) do
+	for o, optarg, lo in util.getopt(ARGV, "hsdi:c:", longopt) do
 		if o == '?' or o == "h" then
 			usage()
 		end
