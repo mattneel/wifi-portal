@@ -5,94 +5,98 @@ local log = require "wifi-portal.log"
 local conf = require "wifi-portal.conf"
 local util = require "wifi-portal.util"
 
-function http_printf(mgr, nc, fmt, ...)
-	 mgr:send_head(nc, 200, -1)
-	 mgr:print_http_chunk(nc, string.format(fmt, ...))
-	 mgr:print_http_chunk(nc, "")
+function http_printf(con, fmt, ...)
+	 con:send_http_head(200, -1)
+	 con:send_http_chunk(string.format(fmt, ...))
+	 con:send_http_chunk("")
 end
 
-function http_callback_404(mgr, nc, msg)
+function http_callback_404(con)
 	--Redirect them to auth server
-	local mac = util.arp_get_mac(conf.ifname, msg.remote_addr)
+	local remote_addr = con:remote_addr()
+	local mac = util.arp_get_mac(conf.ifname, remote_addr)
 
 	if not mac then
-		http_printf(mgr, nc, "Error: Unable to get your Mac address")
+		http_printf(con, "Error: Unable to get your Mac address")
 	else
-		mgr:http_send_redirect(nc, 302, string.format(conf.authserv_login_url, msg.remote_addr, mac))
+		con:send_http_redirect(302, string.format(conf.authserv_login_url, remote_addr, mac))
 	end	
 end
 
-function http_callback_auth(mgr, nc, msg)
-	local token = mgr:get_http_var(msg.hm, "token")
+function http_callback_auth(con)
+	local token = con:get_http_var("token")
 
 	if not token then
-		http_printf(mgr, nc, "Error: Unable to get your token")
+		http_printf(con, "Error: Unable to get your token")
 		return
 	end
 
-	local mac = util.arp_get_mac(conf.ifname, msg.remote_addr)
-	mgr:connect_http(string.format(conf.authserv_auth_url, msg.remote_addr, mac, token), function(nc2, event, msg2)
+	local mgr = con:get_mgr()
+	local remote_addr = con:remote_addr()
+	local mac = util.arp_get_mac(conf.ifname, remote_addr)
+	mgr:connect_http(function(con2, event)
 		if event == evmg.MG_EV_CONNECT then
-			if msg2.connected then
+			local s, err = con2:connected()
+			if s then
 				util.mark_auth_online()
 			else
 				util.mark_auth_offline()
-				log.info("auth server offline:", msg.err)
+				log.info("auth server offline:", err)
 			end
 		elseif event == evmg.MG_EV_HTTP_REPLY then
-			mgr:set_connection_flags(nc2, evmg.MG_F_CLOSE_IMMEDIATELY)
+			con2:set_flags(evmg.MG_F_CLOSE_IMMEDIATELY)
 
-			local authcode = msg2.body:match("Auth: (%d)")
+			local authcode = con2:body():match("Auth: (%d)")
 			if authcode == "1" then
 				-- Client was granted access by the auth server
-				mgr:http_send_redirect(nc, 302, conf.authserv_portal_url)
-				util.add_trusted_mac(util.arp_get_mac(conf.ifname, msg.remote_addr))
+				con:send_http_redirect(302, conf.authserv_portal_url)
+				util.add_trusted_mac(util.arp_get_mac(conf.ifname, remote_addr))
 			else
 				-- Client was denied by the auth server
-				mgr:http_send_redirect(nc, 302, string.format(conf.authserv_message_url, "denied"))
+				con:send_http_redirect(302, string.format(conf.authserv_message_url, "denied"))
 			end
 			
 		end
-	end)
+	end, string.format(conf.authserv_auth_url, remote_addr, mac, token))
 end
 
-local function dispach(mgr, nc, msg)
-	local uri = msg.uri
+local function dispach(con)
+	local uri = con:uri()
 
 --[[
 	log.info("--------------dispach-----------------------")
-	log.info("method:", msg.method)
-	log.info("uri:", msg.uri)
-	log.info("proto:", msg.proto)
-	log.info("remote_addr:", msg.remote_addr)
+	log.info("method:", con:method())
+	log.info("uri:", con:uri())
+	log.info("proto:", con:proto())
+	log.info("remote_addr:", con:remote_addr())
 
-	for k, v in pairs(msg.headers) do
+	for k, v in pairs(con:headers()) do
 		log.info(k, ":", v)
 	end
 --]]
 
 	if uri == "/wifidog/auth" then
-		http_callback_auth(mgr, nc, msg)
+		http_callback_auth(con)
 		return true
 	else
-		http_callback_404(mgr, nc, msg)
+		http_callback_404(con)
 		return true
 	end
 end
 
 function start(mgr)
-	local function ev_handle(nc, event, msg)
+	local function ev_handle(con, event)
 		if event == evmg.MG_EV_HTTP_REQUEST then
-			return dispach(mgr, nc, msg)
+			return dispach(con)
 		end
 	end
 
 	local opt = {proto = "http"}
-	mgr:bind(conf.gw_address .. ":" .. conf.gw_port, ev_handle, opt)
+	mgr:listen(ev_handle, conf.gw_address .. ":" .. conf.gw_port, opt)
 
 	opt.ssl_cert = "/etc/wifi-portal/wp.crt"
 	opt.ssl_key = "/etc/wifi-portal/wp.key"
-	mgr:bind(conf.gw_address .. ":" .. conf.gw_ssl_port, ev_handle, opt)
+	mgr:listen(ev_handle, conf.gw_address .. ":" .. conf.gw_ssl_port, opt)
 
 	log.info("http start...")
 end

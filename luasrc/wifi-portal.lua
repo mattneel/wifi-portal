@@ -12,8 +12,6 @@ local ping = require "wifi-portal.ping"
 local ARGV = arg
 local inspect_configuration
 
-local mgr = evmg.init()
-
 function usage()
 	print("Usage:", ARGV[0], "[options]")
 	print([[
@@ -49,6 +47,7 @@ end
 
 local function main()
 	local loop = ev.Loop.default
+	local mgr = evmg.init()
 	
 	parse_commandline()
 	conf.parse_conf()
@@ -68,9 +67,7 @@ local function main()
 	
 	loop:loop()
 	
-	mgr:destroy()	
 	log.info("exit...")
-
 	log.close()
 end
 
