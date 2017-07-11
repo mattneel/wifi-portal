@@ -23,7 +23,7 @@ function usage()
 end
 
 local function parse_commandline()	
-	for o, optarg, lo in util.getopt(ARGV, "hc:id", longopt) do
+	for o, optarg in evmg.getopt(ARGV, "hc:id") do
 		if o == "c" then
 			conf.file = optarg
 		elseif o == "i" then
