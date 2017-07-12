@@ -1,12 +1,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wifi-portal
-PKG_VERSION:=2017-7-3
+PKG_VERSION:=2017-7-12
 PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/zhaojh329/wifi-portal.git
-PKG_SOURCE_VERSION:=a6a2122683469dfced3d4d4969bb917ed5e998fb
+PKG_SOURCE_VERSION:=6f1b004236638fb02fa7e52accd02ab249886e2d
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 
 include $(INCLUDE_DIR)/package.mk
@@ -16,7 +16,7 @@ define Package/$(PKG_NAME)
   SUBMENU:=Captive Portals
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+evmongoose +kmod-wifi-portal
+  DEPENDS:=+evmongoose-lua +kmod-wifi-portal
   TITLE:=A very efficient captive portal solution
 endef
 
