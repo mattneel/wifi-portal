@@ -8,6 +8,7 @@ local conf = require "wifi-portal.conf"
 local util = require "wifi-portal.util"
 local http = require "wifi-portal.http"
 local ping = require "wifi-portal.ping"
+local posix = evmg.posix
 
 local ARGV = arg
 local inspect_configuration
@@ -23,7 +24,7 @@ function usage()
 end
 
 local function parse_commandline()	
-	for o, optarg in evmg.getopt(ARGV, "hc:id") do
+	for o, optarg in posix.getopt(ARGV, "hc:id") do
 		if o == "c" then
 			conf.file = optarg
 		elseif o == "i" then
@@ -36,15 +37,6 @@ local function parse_commandline()
 	end
 end
 
-local function init_log()
-	local option = log.syslog.LOG_ODELAY
-
-	if conf.log_to_stderr then
-		option = option + log.syslog.LOG_PERROR 
-	end
-	log.open("wifi-portal", option, log.syslog.LOG_USER)
-end
-
 local function main()
 	local loop = ev.Loop.default
 	local mgr = evmg.init()
@@ -54,7 +46,7 @@ local function main()
 	
 	if inspect_configuration then conf.show() end
 
-	init_log()
+	log.init()
 
 	ev.Signal.new(function(loop, sig, revents)
 		loop:unloop()

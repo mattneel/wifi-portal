@@ -2,45 +2,53 @@ module(..., package.seeall)
 
 local evmg = require "evmongoose"
 local conf = require "wifi-portal.conf"
-syslog = evmg.syslog
+local posix = evmg.posix
 
 function open(ident, option, facility)
-	syslog.openlog(ident, option, facility)
+	posix.openlog(ident, option, facility)
 end
 
 function close()
-	syslog.closelog()
+	posix.closelog()
 end
 
 function logger(level, ...)
-	syslog.syslog(level, table.concat({...}, "\t"))
+	posix.syslog(level, table.concat({...}, "\t"))
 end
 
 function info(...)
-	logger(syslog.LOG_INFO, ...)
+	logger(posix.LOG_INFO, ...)
 end
 
 function notice(...)
-	logger(syslog.LOG_NOTICE, ...)
+	logger(posix.LOG_NOTICE, ...)
 end
 
 function warning(...)
-	logger(syslog.LOG_WARNING, ...)
+	logger(posix.LOG_WARNING, ...)
 end
 
 function error(...)
-	logger(syslog.LOG_ERR, ...)
+	logger(posix.LOG_ERR, ...)
 end
 
 function crit(...)
-	logger(syslog.LOG_CRIT, ...)
+	logger(posix.LOG_CRIT, ...)
 end
 
 function alert(...)
-	logger(syslog.LOG_ALERT, ...)
+	logger(posix.LOG_ALERT, ...)
 end
 
 function emerg(...)
-	logger(syslog.LOG_EMERG, ...)
+	logger(posix.LOG_EMERG, ...)
 end
 
+function init()
+	local option = posix.LOG_ODELAY
+
+	if conf.log_to_stderr then
+		option = option + posix.LOG_PERROR 
+	end
+	open("wifi-portal", option, posix.LOG_USER)
+end
