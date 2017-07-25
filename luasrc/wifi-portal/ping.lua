@@ -7,7 +7,7 @@ local conf = require "wifi-portal.conf"
 local util = require "wifi-portal.util"
 
 local function ping_resp_cb(con)
-	local body = con:body()
+	local body = con:get_http_body()
 	if not body or not body:match("Pong") then
 		log.info("Auth server did NOT say Pong!", body or "")
 	else
@@ -21,12 +21,12 @@ function start(mgr,  loop)
 		
 		mgr:connect_http(function(con, event)
 			if event == evmg.MG_EV_CONNECT then
-				local s, err = con:connected()
-				if s then
+				local result = con:get_evdata()
+				if result.connected then
 					util.mark_auth_online()
 				else
 					util.mark_auth_offline()
-					log.info("auth server offline:", err)
+					log.info("auth server offline:", result.err)
 				end
 			elseif event == evmg.MG_EV_HTTP_REPLY then
 				con:set_flags(evmg.MG_F_CLOSE_IMMEDIATELY)

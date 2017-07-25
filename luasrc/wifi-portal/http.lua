@@ -11,9 +11,9 @@ function http_printf(con, fmt, ...)
 	 con:send_http_chunk("")
 end
 
-function http_callback_404(con)
+function http_callback_404(con, hm)
 	--Redirect them to auth server
-	local remote_addr = con:remote_addr()
+	local remote_addr = hm.remote_addr
 	local mac = util.arp_get_mac(conf.ifname, remote_addr)
 
 	if not mac then
@@ -23,7 +23,7 @@ function http_callback_404(con)
 	end	
 end
 
-function http_callback_auth(con)
+function http_callback_auth(con, hm)
 	local token = con:get_http_var("token")
 
 	if not token then
@@ -32,21 +32,21 @@ function http_callback_auth(con)
 	end
 
 	local mgr = con:get_mgr()
-	local remote_addr = con:remote_addr()
+	local remote_addr = hm.remote_addr
 	local mac = util.arp_get_mac(conf.ifname, remote_addr)
 	mgr:connect_http(function(con2, event)
 		if event == evmg.MG_EV_CONNECT then
-			local s, err = con2:connected()
-			if s then
+			local result = con2:get_evdata()
+			if result.connected then
 				util.mark_auth_online()
 			else
 				util.mark_auth_offline()
-				log.info("auth server offline:", err)
+				log.info("auth server offline:", result.err)
 			end
 		elseif event == evmg.MG_EV_HTTP_REPLY then
 			con2:set_flags(evmg.MG_F_CLOSE_IMMEDIATELY)
 
-			local authcode = con2:body():match("Auth: (%d)")
+			local authcode = con2:get_http_body():match("Auth: (%d)")
 			if authcode == "1" then
 				-- Client was granted access by the auth server
 				con:send_http_redirect(302, conf.authserv_portal_url)
@@ -61,25 +61,26 @@ function http_callback_auth(con)
 end
 
 local function dispach(con)
-	local uri = con:uri()
-
+	local hm = con:get_evdata()
+	local uri = hm.uri
+	
 --[[
 	log.info("--------------dispach-----------------------")
-	log.info("method:", con:method())
-	log.info("uri:", con:uri())
-	log.info("proto:", con:proto())
-	log.info("remote_addr:", con:remote_addr())
+	log.info("method:", hm.method())
+	log.info("uri:", uri)
+	log.info("proto:", hm.proto())
+	log.info("remote_addr:", hm.remote_addr())
 
-	for k, v in pairs(con:headers()) do
+	for k, v in pairs(con:get_http_headers()) do
 		log.info(k, ":", v)
 	end
 --]]
 
 	if uri == "/wifidog/auth" then
-		http_callback_auth(con)
+		http_callback_auth(con, hm)
 		return true
 	else
-		http_callback_404(con)
+		http_callback_404(con, hm)
 		return true
 	end
 end
