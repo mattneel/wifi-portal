@@ -32,6 +32,9 @@
 #include "tip.h"
 #include "tmac.h"
 
+#define IPS_HIJACKED	(1 << 31)
+#define IPS_ALLOWED		(1 << 30)
+
 static struct proc_dir_entry *proc;
 static char gw_interface[32] = "br-lan";
 static int gw_interface_ifindex = -1;
@@ -39,6 +42,9 @@ static __be32 gw_interface_ipaddr;
 static int gw_port = 2060;
 static int gw_ssl_port = 8443;
 static int wifidog_enabled;
+static int wifidog_debug;
+
+#define w_debug(fmt, arg...) {if (wifidog_debug) printk(KERN_DEBUG "[%s][%d]"fmt, __FILE__, __LINE__, ##arg);}
 
 static int update_gw_interface(const char *interface)
 {
@@ -77,8 +83,11 @@ static int proc_config_show(struct seq_file *s, void *v)
 {
 	seq_printf(s, "enabled = %d\n", wifidog_enabled);
 	seq_printf(s, "interface = %s\n", gw_interface);
+	seq_printf(s, "ifindex = %d\n", gw_interface_ifindex);
+	seq_printf(s, "ipaddr = %pI4\n", &gw_interface_ipaddr);
 	seq_printf(s, "port = %d\n", gw_port);
 	seq_printf(s, "ssl_port = %d\n", gw_ssl_port);
+	seq_printf(s, "debug = %d\n", wifidog_debug);
 	
 	return 0;
 }
@@ -121,10 +130,13 @@ static ssize_t proc_config_write(struct file *file, const char __user *buf, size
 		else if (!strcmp(key, "interface")) {
 			strncpy(gw_interface, value, sizeof(gw_interface));
 			update_gw_interface(gw_interface);
-		} else if (!strcmp(key, "port"))
+		} else if (!strcmp(key, "port")) {
 			gw_port = simple_strtol(value, NULL, 0);
-		else if (!strcmp(key, "ssl_port"))
+		} else if (!strcmp(key, "ssl_port")) {
 			gw_ssl_port = simple_strtol(value, NULL, 0);
+		} else if (!strcmp(key, "debug")) {
+			wifidog_debug = simple_strtol(value, NULL, 0);
+		}
 		
 		key = delim;
 	}
@@ -151,12 +163,9 @@ static u32 __nf_nat_setup_info(void *priv, struct sk_buff *skb, const struct nf_
 	struct tcphdr *tph = tcp_hdr(skb);
 	union nf_conntrack_man_proto proto;
 	struct nf_nat_range newrange;
-	
-	if (tph->dest == htons(80))
-		proto.tcp.port = htons(gw_port);
-	else
-		proto.tcp.port = htons(gw_ssl_port);
+	static uint16_t PORT_80 = htons(80);
 
+	proto.tcp.port = (tph->dest == PORT_80) ? htons(gw_port) : htons(gw_ssl_port);
 	newrange.flags	     = NF_NAT_RANGE_MAP_IPS | NF_NAT_RANGE_PROTO_SPECIFIED;
 	newrange.min_addr.ip = newrange.max_addr.ip = gw_interface_ipaddr;
 	newrange.min_proto   = newrange.max_proto = proto;
@@ -168,12 +177,23 @@ static u32 wifidog_hook(void *priv, struct sk_buff *skb, const struct nf_hook_st
 {
 	struct ethhdr *ehdr;
 	struct iphdr *iph;
-	u8 protocol;
+	struct nf_conn *ct;
+	struct tcphdr *tph;
+    struct udphdr *uph;
+	enum ip_conntrack_info ctinfo;
+	static uint16_t PORT_22 = htons(22);	/* ssh */
+	static uint16_t PORT_80 = htons(80);	/* http */
+	static uint16_t PORT_443 = htons(443);	/* https */
+	static uint16_t PORT_53 = htons(53);	/* dns */
+	static uint16_t PORT_123 = htons(123);	/* ntp */
 	
 	if (unlikely(!wifidog_enabled))
 		return NF_ACCEPT;
 	
-	if (unlikely(gw_interface_ifindex < 0) ||  state->in->ifindex != gw_interface_ifindex)
+	if (unlikely(state->in->ifindex != gw_interface_ifindex))
+		return NF_ACCEPT;
+
+	if (skb->pkt_type == PACKET_BROADCAST || skb->pkt_type == PACKET_MULTICAST)
 		return NF_ACCEPT;
 	
 	ehdr = eth_hdr(skb);
@@ -181,28 +201,51 @@ static u32 wifidog_hook(void *priv, struct sk_buff *skb, const struct nf_hook_st
 	
 	if (iph->daddr == gw_interface_ipaddr)
 		return NF_ACCEPT;
-	
-	if (trusted_ip(iph->daddr))
+
+	ct = nf_ct_get(skb, &ctinfo);
+	if (!ct)
 		return NF_ACCEPT;
-	
-	if (trusted_mac(ehdr->h_source))
+
+	if ((ct->status & IPS_HIJACKED) || (ct->status & IPS_ALLOWED)) {
 		return NF_ACCEPT;
-	
-	protocol = iph->protocol;
-	
-	if (protocol == IPPROTO_UDP) {
-		struct udphdr *uph = udp_hdr(skb);
-		if (uph->dest == htons(53) || uph->dest == htons(67))
+	} else if (ctinfo == IP_CT_NEW && (trusted_ip(iph->daddr) || trusted_mac(ehdr->h_source))) {
+		ct->status |= IPS_ALLOWED;
+		return NF_ACCEPT; 
+	}
+
+	switch (iph->protocol) {
+	case IPPROTO_TCP:
+		tph = tcp_hdr(skb);
+		if(PORT_22 == tph->dest) {
+			ct->status |= IPS_ALLOWED;
 			return NF_ACCEPT;
-		return NF_DROP;
-	} else if (protocol == IPPROTO_TCP) {
-		struct tcphdr *tph = tcp_hdr(skb);
-		if (tph->dest == htons(80) || tph->dest == htons(443))
-			return nf_nat_ipv4_in(priv, skb, state, __nf_nat_setup_info);
+		} else if ((PORT_443 != tph->dest) && (PORT_80 != tph->dest)) {
+			return NF_DROP;
+		}
+		break;
+		
+	case IPPROTO_UDP:
+		uph = udp_hdr(skb);
+		if(uph->dest == PORT_53 || uph->dest == PORT_123) {
+			ct->status |= IPS_ALLOWED;
+			return NF_ACCEPT;
+		}
+		break;
+		
+	default:
+		ct->status |= IPS_ALLOWED;
+		return NF_ACCEPT;
+	}
+
+	
+	/* all packets from unknown client are dropped */
+	if (ctinfo != IP_CT_NEW || (ct->status & IPS_DST_NAT_DONE)) {
+		w_debug("dropping packets of suspect stream, src:%pI4, dst:%pI4\n", &iph->saddr, &iph->daddr);
 		return NF_DROP;
 	}
-	
-	return NF_ACCEPT;
+
+	ct->status |= IPS_HIJACKED;
+	return nf_nat_ipv4_in(priv, skb, state, __nf_nat_setup_info);
 }
 
 static struct nf_hook_ops wifidog_ops __read_mostly = {
