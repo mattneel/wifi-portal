@@ -62,22 +62,23 @@ end
 
 local function dispach(con)
 	local hm = con:get_evdata()
-	local uri = hm.uri
-	
+
+--[[
 	log.info("--------------dispach-----------------------")
 	log.info("method:", hm.method)
-	log.info("uri:", uri)
+	log.info("uri:", hm.uri)
 	log.info("proto:", hm.proto)
 	log.info("remote_addr:", hm.remote_addr)
 
 	for k, v in pairs(con:get_http_headers()) do
 		log.info(k, ":", v)
 	end
+--]]
 
-	if uri == "/wifidog/auth" then
+	if hm.uri == "/wifidog/auth" then
 		http_callback_auth(con, hm)
 		return true
-	else
+	elseif hm.method ~= "POST" then
 		http_callback_404(con, hm)
 		return true
 	end
