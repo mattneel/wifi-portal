@@ -8,6 +8,7 @@ local conf = require "wifi-portal.conf"
 local util = require "wifi-portal.util"
 local http = require "wifi-portal.http"
 local ping = require "wifi-portal.ping"
+local wx = require "wifi-portal.wx"
 local posix = evmg.posix
 
 local ARGV = arg
@@ -52,6 +53,7 @@ local function main()
 		loop:unloop()
 	end, ev.SIGINT):start(loop)
 
+	wx.init(mgr)
 	util.add_trusted_ip(conf.authserv_hostname)
 	
 	http.start(mgr)
