@@ -130,17 +130,6 @@
 		----参考文档----
 			https://mp.weixin.qq.com/advanced/wiki?t=home/index&id=mp1444894086&token=&lang=zh_CN
 		*/
-		var appId = 'wx18fd578c0f8f3810';
-		var shopId = '3587240';
-		var secretKey = 'a3635e4b2999897a6643388569d03b82';
-		var ssid = 'WX-mt7620-2215';
-		var mac = '64:09:80:01:22:16';
-		var bssid = '64:09:80:01:22:16';
-		var extend = 'demoNew';
-		var authUrl = "http://192.168.0.100:8900/wifidog/auth";
-		var timestamp = new Date().getTime();
-		var toSign = appId + extend + timestamp + shopId + authUrl + mac + ssid + bssid + secretKey;
-		var sign = md5(toSign)
 		Wechat_GotoRedirect(appId, extend, timestamp, sign, shopId, authUrl, mac, ssid, bssid);
 	}
 </script>
