@@ -58,11 +58,14 @@ local function main()
 	
 	http.start(mgr)
 	ping.start(mgr, loop)
+
+	util.enable(true)
 	
 	loop:loop()
-	
+	util.enable(false)
 	log.info("exit...")
 	log.close()
+	
 end
 
 main()

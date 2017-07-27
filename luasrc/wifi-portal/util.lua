@@ -11,6 +11,16 @@ function ubus(object, method, param)
 	return ubus_con:call(object, method, param or {})
 end
 
+function enable(e)
+	local file = io.open("/proc/wifidog/config", "w")
+	if e then
+		file:write("enabled=1\n")
+	else
+		file:write("enabled=0\n")
+	end
+	file:close()
+end
+
 function get_iface_mac(ifname)
 	local s = ubus("network.device", "status", {name = ifname})
 	return s.macaddr:gsub(":", ""):upper()

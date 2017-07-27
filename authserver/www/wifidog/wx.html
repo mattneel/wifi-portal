@@ -109,6 +109,14 @@
 
 
 <script type="text/javascript">
+	function getQueryString(name) {
+		var reg = new RegExp("(^|&)"+ name + "=([^&]*)(&|$)");
+		var r = window.location.search.substr(1).match(reg);
+		if(r != null)
+			return unescape(r[2]);
+		return null;
+	}
+
 	function callWechatBrowser(){
 		/* 微信连Wi-Fi协议3.1供运营商portal呼起微信浏览器使用
 		----开发认证流程所需参数----
@@ -130,6 +138,17 @@
 		----参考文档----
 			https://mp.weixin.qq.com/advanced/wiki?t=home/index&id=mp1444894086&token=&lang=zh_CN
 		*/
+		var appId = getQueryString('appid');
+		var shopId = getQueryString('shopid');
+		var secretKey = getQueryString('secretkey');
+		var ssid = getQueryString('ssid');
+		var mac = getQueryString('mac');
+		var bssid = getQueryString('bssid');
+		var extend = getQueryString('extend');
+		var authUrl = window.location.origin + '/wifidog/wxlogin' + window.location.search;
+		var timestamp = new Date().getTime();
+		var toSign = appId + extend + timestamp + shopId + authUrl + mac + ssid + bssid + secretKey;
+		var sign = md5(toSign);
 		Wechat_GotoRedirect(appId, extend, timestamp, sign, shopId, authUrl, mac, ssid, bssid);
 	}
 </script>
