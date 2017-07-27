@@ -20,7 +20,9 @@ function http_callback_404(con, hm)
 		http_printf(con, "Error: Unable to get your Mac address")
 	else
 		local url = string.format(conf.authserv_login_url, remote_addr, mac)
-		con:send_http_redirect(302, url .. "&wx=1&ssid=WX-mt7620-2215&bssid=64:09:80:01:22:16")
+		local ssid = util.get_ssid(conf.wlan_ifname)
+		local bssid = util.get_bssid(conf.wlan_ifname)
+		con:send_http_redirect(302, url .. "&wx=1&ssid=" .. ssid .. "&bssid="  .. bssid)
 	end	
 end
 

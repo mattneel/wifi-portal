@@ -33,6 +33,8 @@ authserv_offline = true
 checkinterval = 60
 clienttimeout = 5
 
+wlan_ifname = "ra0"
+
 function show()
 	print("log_to_stderr:", log_to_stderr)
 

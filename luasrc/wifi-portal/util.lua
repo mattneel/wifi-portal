@@ -1,6 +1,7 @@
 module(..., package.seeall)
 
 local libubus = require "ubus"
+local iwinfo = require "iwinfo"
 
 local ubus_con = libubus.connect()
 if not ubus_con then
@@ -52,6 +53,22 @@ function arp_get_mac(ifname, ip)
 		end
 	end
 
+	return nil
+end
+
+function get_ssid(ifname)
+	local iw = iwinfo.type(ifname) and iwinfo[iwinfo.type(ifname)]
+	if iw then
+		return iw.ssid(ifname)
+	end
+	return nil
+end
+
+function get_bssid(ifname)
+	local iw = iwinfo.type(ifname) and iwinfo[iwinfo.type(ifname)]
+	if iw then
+		return iw.bssid(ifname)
+	end
 	return nil
 end
 
