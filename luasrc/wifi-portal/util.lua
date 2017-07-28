@@ -3,11 +3,19 @@ module(..., package.seeall)
 local libubus = require "ubus"
 local iwinfo = require "iwinfo"
 
+local ev
+local loop
+
 local ubus_con = libubus.connect()
 if not ubus_con then
 	error("Failed to connect to ubus")
 end
-		
+
+function init(_ev, _loop)
+	ev = _ev
+	loop = _loop
+end
+
 function ubus(object, method, param)
 	return ubus_con:call(object, method, param or {})
 end
@@ -78,10 +86,30 @@ function add_trusted_ip(ip)
 	file:close()
 end
 
+
+local temppass_mac = {}
 function add_trusted_mac(mac)
 	local file = io.open("/proc/wifidog/trusted_mac", "w")
 	file:write("+", mac, "\n")
 	file:close()
+	temppass_mac[mac] = nil
+end
+
+function del_trusted_mac(mac)
+	local file = io.open("/proc/wifidog/trusted_mac", "w")
+	file:write("-", mac, "\n")
+	file:close()
+end
+
+function temporary_pass(mac, t)
+	add_trusted_mac(mac)
+	temppass_mac[mac] = true
+	ev.Timer.new(function()
+		if temppass_mac[mac] then
+			del_trusted_mac(mac)
+			temppass_mac[mac] = nil
+		end
+	end, t):start(loop)
 end
 
 function mark_auth_online()
@@ -89,3 +117,4 @@ end
 
 function mark_auth_offline()
 end
+

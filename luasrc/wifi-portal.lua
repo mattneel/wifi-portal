@@ -41,6 +41,8 @@ end
 local function main()
 	local loop = ev.Loop.default
 	local mgr = evmg.init()
+
+	util.init(ev, loop)
 	
 	parse_commandline()
 	conf.parse_conf()
@@ -53,19 +55,18 @@ local function main()
 		loop:unloop()
 	end, ev.SIGINT):start(loop)
 
-	wx.init(mgr)
+	--wx.init(mgr)
 	util.add_trusted_ip(conf.authserv_hostname)
 	
 	http.start(mgr)
 	ping.start(mgr, loop)
 
 	util.enable(true)
-	
+
 	loop:loop()
 	util.enable(false)
 	log.info("exit...")
-	log.close()
-	
+	log.close()	
 end
 
 main()

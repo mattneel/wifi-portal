@@ -117,7 +117,32 @@
 		return null;
 	}
 
+	function temp_pass() {
+		var xmlhttp;
+
+		if (window.XMLHttpRequest) {
+			//  IE7+, Firefox, Chrome, Opera, Safari 浏览器执行代码
+			xmlhttp=new XMLHttpRequest();
+		} else {
+			// IE6, IE5 浏览器执行代码
+			xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		
+		xmlhttp.onreadystatechange=function() {
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+			}
+		}
+
+		var gw_address = getQueryString('gw_address');
+		var gw_port = getQueryString('gw_port');
+		
+		xmlhttp.open("GET","http://" + gw_address + ":" + gw_port + "/wifidog/temppass", true);
+		xmlhttp.send();
+	}
+
 	function callWechatBrowser(){
+		temp_pass();
+		
 		/* 微信连Wi-Fi协议3.1供运营商portal呼起微信浏览器使用
 		----开发认证流程所需参数----
 			ssid
