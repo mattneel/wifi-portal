@@ -41,7 +41,7 @@
 		//注册回调函数
 		function jsonpCallback(result){  
 			if(result && result.success){
-			    alert('WeChat will call up : ' + result.success + '  data:' + result.data);			    
+			    //alert('WeChat will call up : ' + result.success + '  data:' + result.data);			    
 			    var ua=navigator.userAgent;              
 				if (ua.indexOf("iPhone") != -1 ||ua.indexOf("iPod")!=-1||ua.indexOf("iPad") != -1) {   //iPhone             
 					document.location = result.data;
@@ -85,17 +85,17 @@
 		}
 	</script>
 
-<link rel="stylesheet" href="https://wifi.weixin.qq.com/resources/css/style-simple-follow.css"/>
+<link rel="stylesheet" href="/wx/css/style-simple-follow.css"/>
 <script src="/js/md5.min.js"></script>
 
 </head>
 <body class="mod-simple-follow">
 <div class="mod-simple-follow-page">
     <div class="mod-simple-follow-page__banner">
-        <img class="mod-simple-follow-page__banner-bg" src="https://wifi.weixin.qq.com/resources/images/background.jpg" alt=""/>
+        <img class="mod-simple-follow-page__banner-bg" src="/wx/images/background.jpg" alt=""/>
         <div class="mod-simple-follow-page__img-shadow"></div>
         <div class="mod-simple-follow-page__logo">
-            <img class="mod-simple-follow-page__logo-img" src="https://wifi.weixin.qq.com/resources/images/t.weixin.logo.png" alt=""/>
+            <img class="mod-simple-follow-page__logo-img" src="/wx/images/t.weixin.logo.png" alt=""/>
             <p class="mod-simple-follow-page__logo-name"></p>
             <p class="mod-simple-follow-page__logo-welcome">欢迎您</p>
         </div>

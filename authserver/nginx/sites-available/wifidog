@@ -23,7 +23,7 @@ server {
 						local shopid = ""
 						local secretkey = ""
 						local extend = "extend"
-						local url = string.format("/wx.html?%s&appid=%s&shopid=%s&secretkey=%s&extend=%s",
+						local url = string.format("/wx/login.html?%s&appid=%s&shopid=%s&secretkey=%s&extend=%s",
 							ngx.var.args, appid, shopid, secretkey, extend)
 						return ngx.redirect(url)
 					else
