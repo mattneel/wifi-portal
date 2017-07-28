@@ -45,7 +45,7 @@ server {
 				local mac = ngx.var.arg_mac
 				local token = ngx.md5(mac .. ngx.now())
 			
-				local uri = string.format("http://%s:%s/wifidog/auth?token=%s", gw_address, gw_port, token)
+				local uri = string.format("http://%s:%s/wifidog/auth?extend=%s&token=%s", gw_address, gw_port, ngx.var.arg_extend, token)
 				return ngx.redirect(uri)
 					
 			elseif path_fragment == "auth" then

@@ -22,14 +22,15 @@ function http_callback_404(con, hm)
 		local url = string.format(conf.authserv_login_url, remote_addr, mac)
 		local ssid = util.get_ssid(conf.wlan_ifname)
 		local bssid = util.get_bssid(conf.wlan_ifname)
-		con:send_http_redirect(302, url .. "&wx=1&ssid=" .. ssid .. "&bssid="  .. bssid)
+
+		url = url .. "&ssid=" .. ssid .. "&bssid="  .. bssid
+		if conf.wx then url = url .. "&wx=1" end
+		con:send_http_redirect(302, url)
 	end	
 end
 
 function http_callback_auth(con, hm)
 	local token = con:get_http_var("token")
-
-	log.info("http_callback_auth:", hm.uri)
 
 	if not token then
 		http_printf(con, "Error: Unable to get your token")
@@ -54,9 +55,11 @@ function http_callback_auth(con, hm)
 			local authcode = con2:get_http_body():match("Auth: (%d)")
 			if authcode == "1" then
 				-- Client was granted access by the auth server
-				--con:send_http_redirect(302, conf.authserv_portal_url)
-				http_printf(con, "Auth: 1")
-				log.info("authcode:", authcode)
+				if conf.wx then
+					http_printf(con, "Auth: 1")
+				else
+					con:send_http_redirect(302, conf.authserv_portal_url)
+				end
 				util.add_trusted_mac(util.arp_get_mac(conf.ifname, remote_addr))
 			else
 				-- Client was denied by the auth server
@@ -70,22 +73,27 @@ end
 local function dispach(con)
 	local hm = con:get_evdata()
 
-
+	if hm.uri ~= "/wifidog/auth" and hm.method ~= "GET" then
+		return
+	end
+	
+--[[
 	log.info("--------------dispach-----------------------")
 	log.info("method:", hm.method)
 	log.info("uri:", hm.uri)
+	log.info("query_string:", hm.query_string)
 	log.info("proto:", hm.proto)
 	log.info("remote_addr:", hm.remote_addr)
 
 	for k, v in pairs(con:get_http_headers()) do
 		log.info(k, ":", v)
 	end
-
+--]]
 
 	if hm.uri == "/wifidog/auth" then
 		http_callback_auth(con, hm)
 		return true
-	elseif hm.method ~= "POST" then
+	elseif hm.method ~= "POST" then	
 		http_callback_404(con, hm)
 		return true
 	end
