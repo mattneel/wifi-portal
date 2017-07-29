@@ -44,7 +44,7 @@ static int gw_ssl_port = 8443;
 static int wifidog_enabled;
 static int wifidog_debug;
 
-#define w_debug(fmt, arg...) {if (wifidog_debug) printk(KERN_DEBUG "[%s][%d]"fmt, __FILE__, __LINE__, ##arg);}
+#define w_debug(fmt, arg...) {if (wifidog_debug) printk("[%s][%d]"fmt, __FILE__, __LINE__, ##arg);}
 
 static int update_gw_interface(const char *interface)
 {
@@ -230,6 +230,7 @@ static u32 wifidog_hook(void *priv, struct sk_buff *skb, const struct nf_hook_st
 			ct->status |= IPS_ALLOWED;
 			return NF_ACCEPT;
 		}
+		return NF_DROP;
 		break;
 		
 	default:
