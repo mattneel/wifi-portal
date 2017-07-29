@@ -94,7 +94,7 @@ local function dispach(con)
 		http_callback_auth(con, hm)
 		return true
 	elseif hm.uri == "/wifidog/temppass" then
-		util.temporary_pass(util.arp_get_mac(conf.ifname, hm.remote_addr), 5)
+		util.temporary_pass(util.arp_get_mac(conf.ifname, hm.remote_addr), 10)
 		http_printf(con, "")
 	elseif hm.method ~= "POST" then	
 		http_callback_404(con, hm)
