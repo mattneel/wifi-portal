@@ -50,6 +50,8 @@ static struct tmac_entry *tmac_alloc(u8 *addr)
 	INIT_HLIST_NODE(&tmac->hlist);
 	memcpy(tmac->addr, addr, ETH_ALEN);
 	
+	tmac->j = jiffies;
+	
 	return tmac;
 }
 
@@ -177,12 +179,14 @@ static int trusted_mac_seq_show(struct seq_file *s, void *v)
 {
 	struct hlist_head *head = v;
 	struct tmac_entry *pos;
+	struct timeval tv;
 	
 	if (v == SEQ_START_TOKEN) {
-		seq_printf(s, "--------------Trusted MAC Address-------------\n");
+		seq_printf(s, "MAC Address           Online time\n");
 	} else {
 		hlist_for_each_entry(pos, head, hlist) {
-			seq_printf(s, "\t%pM\t\n", &(pos->addr));
+			jiffies_to_timeval(jiffies - pos->j, &tv);
+			seq_printf(s, "%pM     %d\n", &(pos->addr), tv.tv_sec);
 		}
 	}
 

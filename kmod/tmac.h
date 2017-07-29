@@ -22,6 +22,7 @@ struct tmac_entry
 {
 	struct hlist_node	hlist;
 	u8 addr[ETH_ALEN];
+	unsigned long j;
 };
 
 extern const struct file_operations proc_trusted_mac_ops;
