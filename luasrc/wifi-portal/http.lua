@@ -4,6 +4,7 @@ local evmg = require "evmongoose"
 local log = require "wifi-portal.log"
 local conf = require "wifi-portal.conf"
 local util = require "wifi-portal.util"
+local ping = require "wifi-portal.ping"
 
 function http_printf(con, fmt, ...)
 	 con:send_http_head(200, -1)
@@ -19,6 +20,14 @@ function http_callback_404(con, hm)
 	if not mac then
 		http_printf(con, "Error: Unable to get your Mac address")
 	else
+		if not ping.is_online() then
+			return con:send_http_redirect(302, "/internet-offline.html")
+		end
+
+		if not ping.is_auth_online() then
+			return con:send_http_redirect(302, "/authserver-offline.html")
+		end
+	
 		local url = string.format(conf.authserv_login_url, remote_addr, mac)
 		local ssid = util.get_ssid(conf.wlan_ifname)
 		local bssid = util.get_bssid(conf.wlan_ifname)
@@ -72,8 +81,13 @@ end
 
 local function dispach(con)
 	local hm = con:get_evdata()
+	local uri = hm.uri
 
-	if hm.uri ~= "/wifidog/auth" and hm.method ~= "GET" then
+	if uri == "/internet-offline.html" or uri == "/authserver-offline.html" then
+		return
+	end
+	
+	if uri ~= "/wifidog/auth" and hm.method ~= "GET" then
 		return
 	end
 	
@@ -109,7 +123,7 @@ function start(mgr)
 		end
 	end
 
-	local opt = {proto = "http"}
+	local opt = {proto = "http", document_root = "/etc/wifi-portal"}
 	mgr:listen(ev_handle, conf.gw_address .. ":" .. conf.gw_port, opt)
 
 	opt.ssl_cert = "/etc/wifi-portal/wp.crt"

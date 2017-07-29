@@ -42,6 +42,9 @@ define Package/$(PKG_NAME)/install
 
 	$(CP) ./files/wp.crt $(1)/etc/wifi-portal
 	$(CP) ./files/wp.key $(1)/etc/wifi-portal
+
+	$(CP) ./files/internet-offline.html $(1)/etc/wifi-portal
+	$(CP) ./files/authserver-offline.html $(1)/etc/wifi-portal
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

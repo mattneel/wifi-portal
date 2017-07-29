@@ -1,9 +1,9 @@
 module(..., package.seeall)
 
+local ev = require "ev"
 local libubus = require "ubus"
 local iwinfo = require "iwinfo"
 
-local ev
 local loop
 
 local ubus_con = libubus.connect()
@@ -11,8 +11,7 @@ if not ubus_con then
 	error("Failed to connect to ubus")
 end
 
-function init(_ev, _loop)
-	ev = _ev
+function init(_loop)
 	loop = _loop
 end
 
@@ -110,12 +109,6 @@ function temporary_pass(mac, t)
 			temppass_mac[mac] = nil
 		end
 	end, t):start(loop)
-end
-
-function mark_auth_online()
-end
-
-function mark_auth_offline()
 end
 
 function update_interface(ifname)

@@ -36,6 +36,8 @@ clienttimeout = 5
 
 wlan_ifname = "ra0"
 
+popular_server = {"www.baidu.com", "qq.com"}
+
 function show()
 	print("log_to_stderr:", log_to_stderr)
 

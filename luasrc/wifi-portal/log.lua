@@ -13,7 +13,7 @@ function close()
 end
 
 function logger(level, ...)
-	posix.syslog(level, table.concat({...}, "\t"))
+	posix.syslog(level, table.concat({...}, " "))
 end
 
 function info(...)

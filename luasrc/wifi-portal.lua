@@ -42,7 +42,7 @@ local function main()
 	local loop = ev.Loop.default
 	local mgr = evmg.init()
 
-	util.init(ev, loop)
+	util.init(loop)
 	
 	parse_commandline()
 	conf.parse_conf()
