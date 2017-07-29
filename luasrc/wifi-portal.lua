@@ -55,7 +55,7 @@ local function main()
 		loop:unloop()
 	end, ev.SIGINT):start(loop)
 
-	--wx.init(mgr)
+	util.update_interface(conf.ifname)
 	util.add_trusted_ip(conf.authserv_hostname)
 	
 	http.start(mgr)

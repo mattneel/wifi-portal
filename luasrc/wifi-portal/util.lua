@@ -118,3 +118,8 @@ end
 function mark_auth_offline()
 end
 
+function update_interface(ifname)
+	local file = io.open("/proc/wifidog/config", "w")
+	file:write("interface=", ifname, "\n")
+	file:close()
+end
