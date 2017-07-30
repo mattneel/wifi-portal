@@ -12,21 +12,37 @@
  * GNU General Public License for more details.
  */
  
-#ifndef __TMAC_
-#define __TMAC_
+#ifndef __TERMINAL_
+#define __TERMINAL_
 
 #include <linux/types.h>
 #include <linux/if_ether.h>
 
-struct tmac_entry {
-	struct hlist_node	hlist;
-	u8 addr[ETH_ALEN];
-	unsigned long j;
+#define TERM_ACTIVE		(1 << 0)
+#define TERM_AUTHED		(1 << 1)
+
+struct term_flow {
+	u64 tx;
+	u64 rx;
 };
 
-int tmac_init(struct proc_dir_entry *proc);
-void tmac_free(struct proc_dir_entry *proc);
-int add_tmac(u8 *addr);
-int trusted_mac(u8 *addr);
+struct terminal {
+	struct hlist_node node;
+	__be32 ip;
+	u8 mac[ETH_ALEN];
+	u8 active;
+	u32 j;
+	u8 flags;
+	struct term_flow flow;
+	struct timer_list expires;
+};
+
+int term_init(struct proc_dir_entry *proc);
+void term_free(struct proc_dir_entry *proc);
+
+struct terminal *find_term_by_ip(__be32 ip);
+int add_term(u8 *mac, __be32 ip);
+int term_is_authd(__be32 ip);
 
 #endif
+

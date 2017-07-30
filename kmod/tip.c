@@ -22,8 +22,8 @@
 
 #define TIP_HASH_SIZE 128
 
-rwlock_t tip_lock;
-struct hlist_head tip_hash_table[TIP_HASH_SIZE];
+static rwlock_t tip_lock;
+static struct hlist_head tip_hash_table[TIP_HASH_SIZE];
 static struct kmem_cache *tip_cache __read_mostly;
 
 static inline u32 tip_hash_func(u32 addr)
@@ -235,7 +235,7 @@ QUIT:
 	return size;
 }							
 
-const struct file_operations proc_trusted_ip_ops = {
+static const struct file_operations proc_trusted_ip_ops = {
 	.owner 		= THIS_MODULE,
 	.open  		= proc_trusted_ip_open,
 	.read   	= seq_read,

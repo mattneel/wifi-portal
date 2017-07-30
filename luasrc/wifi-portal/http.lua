@@ -65,7 +65,7 @@ function http_callback_auth(con, hm, wx)
 				else
 					con:send_http_redirect(302, conf.authserv_portal_url)
 				end
-				util.add_trusted_mac(util.arp_get_mac(conf.ifname, remote_addr))
+				util.allow_term(remote_addr)
 			else
 				-- Client was denied by the auth server
 				con:send_http_redirect(302, string.format(conf.authserv_message_url, "denied"))
@@ -107,7 +107,7 @@ local function dispach(con)
 		http_callback_auth(con, hm, wx)
 		return true
 	elseif hm.uri == "/wifidog/temppass" then
-		util.temporary_pass(util.arp_get_mac(conf.ifname, hm.remote_addr), 10)
+		util.temporary_pass(hm.remote_addr, 10)
 		http_printf(con, "")
 	elseif hm.method ~= "POST" then	
 		http_callback_404(con, hm)

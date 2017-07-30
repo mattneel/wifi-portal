@@ -29,8 +29,8 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 
+#include "terminal.h"
 #include "tip.h"
-#include "tmac.h"
 
 #define IPS_HIJACKED	(1 << 31)
 #define IPS_ALLOWED		(1 << 30)
@@ -39,6 +39,8 @@ static struct proc_dir_entry *proc;
 static char gw_interface[32] = "br-lan";
 static int gw_interface_ifindex = -1;
 static __be32 gw_interface_ipaddr;
+static __be32 gw_interface_mask;
+static __be32 gw_interface_broadcast;
 static int gw_port = 2060;
 static int gw_ssl_port = 8443;
 static int wifidog_enabled;
@@ -69,6 +71,9 @@ static int update_gw_interface(const char *interface)
 	
 	for_primary_ifa(in_dev) {
 		gw_interface_ipaddr = ifa->ifa_local;
+		gw_interface_mask = ifa->ifa_mask;
+		gw_interface_broadcast = ifa->ifa_broadcast;
+		
 		pr_info("Found ip from %s: %pI4\n", interface, &gw_interface_ipaddr);
 		break;
 	} endfor_ifa(in_dev)
@@ -81,13 +86,15 @@ QUIT:
 
 static int proc_config_show(struct seq_file *s, void *v)
 {
-	seq_printf(s, "enabled = %d\n", wifidog_enabled);
-	seq_printf(s, "interface = %s\n", gw_interface);
-	seq_printf(s, "ifindex = %d\n", gw_interface_ifindex);
-	seq_printf(s, "ipaddr = %pI4\n", &gw_interface_ipaddr);
-	seq_printf(s, "port = %d\n", gw_port);
-	seq_printf(s, "ssl_port = %d\n", gw_ssl_port);
-	seq_printf(s, "debug = %d\n", wifidog_debug);
+	seq_printf(s, "enabled(RW) = %d\n", wifidog_enabled);
+	seq_printf(s, "interface(RW) = %s\n", gw_interface);
+	seq_printf(s, "ifindex(RO) = %d\n", gw_interface_ifindex);
+	seq_printf(s, "ipaddr(RO) = %pI4\n", &gw_interface_ipaddr);
+	seq_printf(s, "netmask(RO) = %pI4\n", &gw_interface_mask);
+	seq_printf(s, "broadcast(RO) = %pI4\n", &gw_interface_broadcast);
+	seq_printf(s, "port(RW) = %d\n", gw_port);
+	seq_printf(s, "ssl_port(RW) = %d\n", gw_ssl_port);
+	seq_printf(s, "debug(RW) = %d\n", wifidog_debug);
 	
 	return 0;
 }
@@ -175,11 +182,12 @@ static u32 __nf_nat_setup_info(void *priv, struct sk_buff *skb, const struct nf_
 
 static u32 wifidog_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
-	struct ethhdr *ehdr;
-	struct iphdr *iph;
+	struct ethhdr *ehdr = eth_hdr(skb);
+	struct iphdr *iph = ip_hdr(skb);
 	struct nf_conn *ct;
 	struct tcphdr *tph;
     struct udphdr *uph;
+	struct terminal *term = NULL;
 	enum ip_conntrack_info ctinfo;
 	static uint16_t PORT_22 = htons(22);	/* ssh */
 	static uint16_t PORT_80 = htons(80);	/* http */
@@ -189,16 +197,26 @@ static u32 wifidog_hook(void *priv, struct sk_buff *skb, const struct nf_hook_st
 	
 	if (unlikely(!wifidog_enabled))
 		return NF_ACCEPT;
-	
+
 	if (unlikely(state->in->ifindex != gw_interface_ifindex))
 		return NF_ACCEPT;
 
+	/* Accept all from non local area networks */
+	if ((iph->saddr | ~gw_interface_mask) != gw_interface_broadcast)
+		return NF_ACCEPT;
+
+	term = find_term_by_ip(iph->saddr);
+	if (likely(term)) {
+		term->flags |= TERM_ACTIVE;
+	} else {
+		add_term(ehdr->h_source, iph->saddr);
+	}
+
+	/* Accept broadcast */
 	if (skb->pkt_type == PACKET_BROADCAST || skb->pkt_type == PACKET_MULTICAST)
 		return NF_ACCEPT;
-	
-	ehdr = eth_hdr(skb);
-	iph = ip_hdr(skb);
-	
+
+	/* Accept to us */
 	if (iph->daddr == gw_interface_ipaddr)
 		return NF_ACCEPT;
 
@@ -208,7 +226,7 @@ static u32 wifidog_hook(void *priv, struct sk_buff *skb, const struct nf_hook_st
 
 	if ((ct->status & IPS_HIJACKED) || (ct->status & IPS_ALLOWED)) {
 		return NF_ACCEPT;
-	} else if (ctinfo == IP_CT_NEW && (trusted_ip(iph->daddr) || trusted_mac(ehdr->h_source))) {
+	} else if (ctinfo == IP_CT_NEW && (trusted_ip(iph->daddr) || term_is_authd(iph->saddr))) {
 		ct->status |= IPS_ALLOWED;
 		return NF_ACCEPT; 
 	}
@@ -249,16 +267,73 @@ static u32 wifidog_hook(void *priv, struct sk_buff *skb, const struct nf_hook_st
 	return nf_nat_ipv4_in(priv, skb, state, __nf_nat_setup_info);
 }
 
-static struct nf_hook_ops wifidog_ops __read_mostly = {
-	.hook		= wifidog_hook,
-	.pf			= PF_INET,
-	.hooknum	= NF_INET_PRE_ROUTING,
-	.priority	= NF_IP_PRI_CONNTRACK + 1 /* after conntrack */
+static u32 term_statistic_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
+{
+	struct iphdr *iph = ip_hdr(skb);
+	struct terminal *term = NULL;
+	__be32 saddr, daddr;
+	u8 from_lan = 0;
+	u8	to_lan = 0;
+	
+	if (ipv4_is_lbcast(iph->daddr) || ipv4_is_multicast(iph->saddr) 
+		|| ipv4_is_multicast(iph->daddr)) {
+			return NF_ACCEPT;
+	}
+
+	saddr = iph->saddr;
+	daddr = iph->daddr;
+
+	if ((saddr | ~gw_interface_mask) == gw_interface_broadcast)
+		from_lan = 1;
+
+	if ((daddr | ~gw_interface_mask) == gw_interface_broadcast)
+		to_lan = 1;
+
+	/* skip lan <-> lan & wan <-> wan */
+	if (unlikely(from_lan == to_lan))
+		return NF_ACCEPT;
+
+	if (from_lan) {
+		term = find_term_by_ip(saddr);
+		if (unlikely(!term))
+			return NF_ACCEPT;
+	} else if (to_lan) {
+		term = find_term_by_ip(daddr);
+		if (unlikely(!term))
+			return NF_ACCEPT;
+	}
+
+	/* Upload */
+	if (from_lan)
+		term->flow.tx += skb->len;
+
+	/* Download */
+	if (to_lan)
+		term->flow.rx += skb->len;
+	
+	return NF_ACCEPT;
+}
+
+static struct nf_hook_ops wifidog_ops[] __read_mostly = {
+	{
+		.hook		= wifidog_hook,
+		.pf			= PF_INET,
+		.hooknum	= NF_INET_PRE_ROUTING,
+		.priority	= NF_IP_PRI_CONNTRACK + 1 /* after conntrack */
+	},
+	{
+		.hook		= term_statistic_hook,
+		.pf			= PF_INET,
+		.hooknum	= NF_INET_FORWARD,
+		.priority	= NF_IP_PRI_LAST
+	},
 };
 
 static int __init wifidog_init(void)
 {
 	int ret;
+
+	update_gw_interface(gw_interface);
 	
 	proc = proc_mkdir("wifidog", NULL);
 	if (!proc) {
@@ -271,33 +346,33 @@ static int __init wifidog_init(void)
 		ret = -EINVAL;
 		goto remove;
 	}
+
+	ret = term_init(proc);
+	if (ret) {
+		pr_err("term_init failed\n");
+		goto remove_config;
+	}
 	
 	ret = tip_init(proc);
 	if (ret) {
 		pr_err("tip_init failed\n");
-		goto remove_config;
+		goto free_term;
 	}
-	
-	ret = tmac_init(proc);
-	if (ret) {
-		pr_err("tmac_init failed\n");
-		goto free_tip;
-	}
-	
-	ret = nf_register_hook(&wifidog_ops);
+
+	ret = nf_register_hooks(wifidog_ops, ARRAY_SIZE(wifidog_ops));
 	if (ret < 0) {
 		pr_err("can't register hook\n");
-		goto free_tmac;
+		goto free_tip;
 	}
 
 	pr_info("kmod of wifidog is started\n");
 
 	return 0;
 
-free_tmac:	
-	tmac_free(proc);
 free_tip:
 	tip_free(proc);
+free_term:
+	term_free(proc);
 remove_config:	
 	remove_proc_entry("config", proc);
 remove:
@@ -307,12 +382,12 @@ remove:
 
 static void __exit wifidog_exit(void)
 {
+	term_free(proc);
 	tip_free(proc);
-	tmac_free(proc);
 	
 	remove_proc_entry("config", proc);
 	remove_proc_entry("wifidog", NULL);
-	nf_unregister_hook(&wifidog_ops);
+	nf_unregister_hooks(wifidog_ops, ARRAY_SIZE(wifidog_ops));
 	
 	pr_info("kmod of wifidog is stop\n");
 }

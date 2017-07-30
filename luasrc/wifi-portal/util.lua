@@ -86,27 +86,27 @@ function add_trusted_ip(ip)
 end
 
 
-local temppass_mac = {}
-function add_trusted_mac(mac)
-	local file = io.open("/proc/wifidog/trusted_mac", "w")
-	file:write("+", mac, "\n")
+local temppass_ip = {}
+function allow_term(ip)
+	local file = io.open("/proc/wifidog/term", "w")
+	file:write("+", ip, "\n")
 	file:close()
-	temppass_mac[mac] = nil
+	temppass_ip[ip] = nil
 end
 
-function del_trusted_mac(mac)
-	local file = io.open("/proc/wifidog/trusted_mac", "w")
-	file:write("-", mac, "\n")
+function deny_term(ip)
+	local file = io.open("/proc/wifidog/term", "w")
+	file:write("-", ip, "\n")
 	file:close()
 end
 
-function temporary_pass(mac, t)
-	add_trusted_mac(mac)
-	temppass_mac[mac] = true
+function temporary_pass(ip, t)
+	allow_term(ip)
+	temppass_ip[mac] = true
 	ev.Timer.new(function()
-		if temppass_mac[mac] then
-			del_trusted_mac(mac)
-			temppass_mac[mac] = nil
+		if temppass_ip[ip] then
+			deny_term(ip)
+			temppass_ip[ip] = nil
 		end
 	end, t):start(loop)
 end
