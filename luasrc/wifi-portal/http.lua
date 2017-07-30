@@ -35,7 +35,7 @@ function http_callback_404(con, hm)
 	end	
 end
 
-function http_callback_auth(con, hm)
+function http_callback_auth(con, hm, wx)
 	local token = con:get_http_var("token")
 
 	if not token then
@@ -46,6 +46,7 @@ function http_callback_auth(con, hm)
 	local mgr = con:get_mgr()
 	local remote_addr = hm.remote_addr
 	local mac = util.arp_get_mac(conf.ifname, remote_addr)
+	
 	mgr:connect_http(function(con2, event)
 		if event == evmg.MG_EV_CONNECT then
 			local result = con2:get_evdata()
@@ -59,8 +60,8 @@ function http_callback_auth(con, hm)
 			local authcode = con2:get_http_body():match("Auth: (%d)")
 			if authcode == "1" then
 				-- Client was granted access by the auth server
-				if conf.wx then
-					http_printf(con, "Auth: 1")
+				if wx then
+					http_printf(con, "")
 				else
 					con:send_http_redirect(302, conf.authserv_portal_url)
 				end
@@ -100,7 +101,10 @@ local function dispach(con)
 --]]
 
 	if hm.uri == "/wifidog/auth" then
-		http_callback_auth(con, hm)
+		local wx = false
+		local ua = con:get_http_headers()["User-Agent"] or ""
+		if ua:match("micromessenger") then wx = true end
+		http_callback_auth(con, hm, wx)
 		return true
 	elseif hm.uri == "/wifidog/temppass" then
 		util.temporary_pass(util.arp_get_mac(conf.ifname, hm.remote_addr), 10)

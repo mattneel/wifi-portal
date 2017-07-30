@@ -10,7 +10,6 @@ gw_address = nil
 gw_port = "2060"
 gw_ssl_port = "8443"
 
-wx = true
 authserv_hostname = "192.168.0.100"
 authserv_port = "8900"
 authserv_path = "/wifidog/"
