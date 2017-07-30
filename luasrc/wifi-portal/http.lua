@@ -5,6 +5,7 @@ local log = require "wifi-portal.log"
 local conf = require "wifi-portal.conf"
 local util = require "wifi-portal.util"
 local ping = require "wifi-portal.ping"
+local client = require "wifi-portal.client"
 
 function http_printf(con, fmt, ...)
 	 con:send_http_head(200, -1)
@@ -66,13 +67,14 @@ function http_callback_auth(con, hm, wx)
 					con:send_http_redirect(302, conf.authserv_portal_url)
 				end
 				util.allow_term(remote_addr)
+				client.add(mac, remote_addr, token)
 			else
 				-- Client was denied by the auth server
 				con:send_http_redirect(302, string.format(conf.authserv_message_url, "denied"))
 			end
 			
 		end
-	end, string.format(conf.authserv_auth_url, remote_addr, mac, token))
+	end, string.format(conf.authserv_auth_url, "login", remote_addr, mac, token, "0", "0"))
 end
 
 local function dispach(con)
@@ -128,6 +130,6 @@ function start(mgr)
 	opt.ssl_cert = "/etc/wifi-portal/wp.crt"
 	opt.ssl_key = "/etc/wifi-portal/wp.key"
 	mgr:listen(ev_handle, conf.gw_address .. ":" .. conf.gw_ssl_port, opt)
-
+	
 	log.info("http start...")
 end

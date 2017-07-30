@@ -102,7 +102,7 @@ end
 
 function temporary_pass(ip, t)
 	allow_term(ip)
-	temppass_ip[mac] = true
+	temppass_ip[ip] = true
 	ev.Timer.new(function()
 		if temppass_ip[ip] then
 			deny_term(ip)

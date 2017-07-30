@@ -5,6 +5,7 @@ local evmg = require "evmongoose"
 local log = require "wifi-portal.log"
 local conf = require "wifi-portal.conf"
 local util = require "wifi-portal.util"
+local client = require "wifi-portal.client"
 
 local loop
 local mgr
@@ -107,6 +108,37 @@ local function check_internet_available()
 	end
 end
 
+
+local function traffic_counter()
+	for e in io.lines("/proc/wifidog/term") do
+		local r = { }, v
+		for v in e:gmatch("%S+") do
+			r[#r+1] = v
+		end
+
+		if r[1] ~= "MAC" and r[6] == "1" then
+			local mac, ip, rx, tx = r[1], r[2], r[3], r[4]
+			local url = string.format(conf.authserv_auth_url, "counters", ip, mac, client.get(r[1]).token, rx, tx)
+			mgr:connect_http(function(con, event)
+				if event == evmg.MG_EV_CONNECT then
+					local result = con:get_evdata()
+					if not result.connected then
+						ping.mark_auth_offline()
+						log.info("auth server offline:", result.err)
+					end
+				elseif event == evmg.MG_EV_HTTP_REPLY then
+					con:set_flags(evmg.MG_F_CLOSE_IMMEDIATELY)
+					local authcode = con:get_http_body():match("Auth: (%d)")
+					if authcode ~= "1" then
+						util.deny_term(ip)
+						client.del(mac)
+					end
+				end
+			end, url)
+		end
+	end
+end
+
 function start(_mgr,   _loop)
 	mgr = _mgr
 	loop = _loop
@@ -142,7 +174,11 @@ function start(_mgr,   _loop)
 			elseif event == MG_EV_CLOSE then
 			end
 		end, ping_url)
-	end, 0.1, conf.checkinterval):start(loop)
+	end, 2, conf.checkinterval):start(loop)
 
+	ev.Timer.new(function(loop, timer, revents)
+		traffic_counter()
+	end, 10, conf.checkinterval):start(loop)
+	
 	log.info("ping start...")
 end

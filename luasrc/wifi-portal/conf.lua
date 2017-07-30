@@ -72,7 +72,7 @@ function parse_conf()
 	authserv_login_url = string.format("%s%s?gw_address=%s&gw_port=%s&bssid=%sip=%%s&mac=%%s&ssid=%%s",
 			authserv_url, authserv_login_path_fragment, gw_address, gw_port, util.get_bssid(wlan_ifname))
 			
-	authserv_auth_url = string.format("%s%s?stage=login&gw_id=%sip=%%s&mac=%%s&token=%%s", 
+	authserv_auth_url = string.format("%s%s?stage=%%s&gw_id=%sip=%%s&mac=%%s&token=%%s&incoming=%%s&outgoing=%%s",
 			authserv_url, authserv_auth_path_fragment, gw_id)
 			
 	authserv_portal_url = string.format("%s%s?gw_id=%s", authserv_url, authserv_portal_path_fragment, gw_id)
