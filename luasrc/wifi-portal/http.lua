@@ -27,13 +27,10 @@ function http_callback_404(con, hm)
 		if not ping.is_auth_online() then
 			return con:send_http_redirect(302, "/authserver-offline.html")
 		end
-	
-		local url = string.format(conf.authserv_login_url, remote_addr, mac)
-		local ssid = util.get_ssid(conf.wlan_ifname)
-		local bssid = util.get_bssid(conf.wlan_ifname)
+		
+		local ssid = util.get_ssid(conf.wlan_ifname)	
+		local url = string.format(conf.authserv_login_url, remote_addr, mac, ssid)
 
-		url = url .. "&ssid=" .. ssid .. "&bssid="  .. bssid
-		if conf.wx then url = url .. "&wx=1" end
 		con:send_http_redirect(302, url)
 	end	
 end
@@ -52,10 +49,8 @@ function http_callback_auth(con, hm)
 	mgr:connect_http(function(con2, event)
 		if event == evmg.MG_EV_CONNECT then
 			local result = con2:get_evdata()
-			if result.connected then
-				util.mark_auth_online()
-			else
-				util.mark_auth_offline()
+			if not result.connected then
+				ping.mark_auth_offline()
 				log.info("auth server offline:", result.err)
 			end
 		elseif event == evmg.MG_EV_HTTP_REPLY then

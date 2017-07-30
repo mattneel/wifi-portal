@@ -63,15 +63,15 @@ function parse_conf()
 	started_time = os.time()
 	gw_id = util.get_iface_mac(ifname)
 	gw_address = util.get_iface_ip(ifname)
-
+	
 	authserv_url = string.format("%s://%s:%s%s",
 			authserv_ssl and "https" or "http", authserv_hostname, authserv_port, authserv_path)
 
-	authserv_ping_url = string.format("%s%s?gw_id=%s&sys_uptime=%%s&sys_memfree=%%s&sys_load=%%s&wifidog_uptime=%%s", 
+	authserv_ping_url = string.format("%s%s?gw_id=%s&sys_uptime=%%s&sys_memfree=%%s&sys_load=%%s&wifidog_uptime=%%s",
 			authserv_url, authserv_ping_path_fragment, gw_id)
 			
-	authserv_login_url = string.format("%s%s?gw_address=%s&gw_port=%s&ip=%%s&mac=%%s", 
-			authserv_url, authserv_login_path_fragment, gw_address, gw_port)
+	authserv_login_url = string.format("%s%s?gw_address=%s&gw_port=%s&bssid=%sip=%%s&mac=%%s&ssid=%%s",
+			authserv_url, authserv_login_path_fragment, gw_address, gw_port, util.get_bssid(wlan_ifname))
 			
 	authserv_auth_url = string.format("%s%s?stage=login&gw_id=%sip=%%s&mac=%%s&token=%%s", 
 			authserv_url, authserv_auth_path_fragment, gw_id)

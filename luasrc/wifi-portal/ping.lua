@@ -37,7 +37,7 @@ function is_auth_online()
 	end
 end
 
-local function mark_auth_offline()
+function mark_auth_offline()
 	local before
     local after
 

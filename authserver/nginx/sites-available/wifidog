@@ -17,17 +17,29 @@ server {
 
 			elseif path_fragment == "login" then
 				if ngx.var.request_method == "GET" then
-					if ngx.var.arg_wx then
-						-- To fill
-						local appid = ""
-						local shopid = ""
-						local secretkey = ""
-						local extend = "extend"
-						local url = string.format("/wx/login.html?%s&appid=%s&shopid=%s&secretkey=%s&extend=%s",
-							ngx.var.args, appid, shopid, secretkey, extend)
-						return ngx.redirect(url)
+					if ngx.var.http_user_agent:match("micromessenger") then
+						local gw_address = ngx.var.arg_gw_address
+						local gw_port = ngx.var.arg_gw_port
+						local mac = ngx.var.arg_mac
+						local token = ngx.md5(mac .. ngx.now())
+					
+						local uri = string.format("http://%s:%s/wifidog/auth?extend=%s&token=%s", gw_address, gw_port, ngx.var.arg_extend, token)
+						return ngx.redirect(uri)
 					else
-						return ngx.redirect("/login.html?" .. ngx.var.args)
+						local wx = true	-- Configurable
+						
+						if wx then
+							-- To fill
+							local appid = ""
+							local shopid = ""
+							local secretkey = ""
+							local extend = "extend"
+							local url = string.format("/wx/login.html?%s&appid=%s&shopid=%s&secretkey=%s&extend=%s",
+								ngx.var.args, appid, shopid, secretkey, extend)
+							return ngx.redirect(url)
+						else
+							return ngx.redirect("/login.html?" .. ngx.var.args)
+						end
 					end
 				else
 					local gw_address = ngx.var.arg_gw_address
@@ -37,16 +49,7 @@ server {
 				
 					local uri = string.format("http://%s:%s/wifidog/auth?token=%s", gw_address, gw_port, token)
 					return ngx.redirect(uri)
-				end
-			
-			elseif path_fragment == "wxlogin" then
-				local gw_address = ngx.var.arg_gw_address
-				local gw_port = ngx.var.arg_gw_port
-				local mac = ngx.var.arg_mac
-				local token = ngx.md5(mac .. ngx.now())
-			
-				local uri = string.format("http://%s:%s/wifidog/auth?extend=%s&token=%s", gw_address, gw_port, ngx.var.arg_extend, token)
-				return ngx.redirect(uri)
+				end				
 					
 			elseif path_fragment == "auth" then
 				return ngx.say("Auth: 1")

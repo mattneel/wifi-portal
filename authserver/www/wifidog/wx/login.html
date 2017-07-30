@@ -170,7 +170,7 @@
 		var mac = getQueryString('mac');
 		var bssid = getQueryString('bssid');
 		var extend = getQueryString('extend');
-		var authUrl = window.location.origin + '/wifidog/wxlogin' + window.location.search;
+		var authUrl = window.location.origin + '/wifidog/login' + window.location.search;
 		var timestamp = new Date().getTime();
 		var toSign = appId + extend + timestamp + shopId + authUrl + mac + ssid + bssid + secretKey;
 		var sign = md5(toSign);
