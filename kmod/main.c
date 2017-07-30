@@ -260,8 +260,6 @@ static int __init wifidog_init(void)
 {
 	int ret;
 	
-	update_gw_interface(gw_interface);
-	
 	proc = proc_mkdir("wifidog", NULL);
 	if (!proc) {
 		pr_err("can't create dir /proc/wifidog/\n");
@@ -274,25 +272,13 @@ static int __init wifidog_init(void)
 		goto remove;
 	}
 	
-	if (!proc_create("trusted_ip", 0644, proc, &proc_trusted_ip_ops)) {
-		pr_err("can't create file /proc/wifidog/trusted_ip\n");
-		ret = -EINVAL;
+	ret = tip_init(proc);
+	if (ret) {
+		pr_err("tip_init failed\n");
 		goto remove_config;
 	}
 	
-	if (!proc_create("trusted_mac", 0644, proc, &proc_trusted_mac_ops)) {
-		pr_err("can't create file /proc/wifidog/trusted_mac\n");
-		ret = -EINVAL;
-		goto remove_trusted_ip;
-	}
-	
-	ret = tip_init();
-	if (ret) {
-		pr_err("tip_init failed\n");
-		goto remove_trusted_mac;
-	}
-	
-	ret = tmac_init();
+	ret = tmac_init(proc);
 	if (ret) {
 		pr_err("tmac_init failed\n");
 		goto free_tip;
@@ -309,13 +295,9 @@ static int __init wifidog_init(void)
 	return 0;
 
 free_tmac:	
-	tmac_free();
+	tmac_free(proc);
 free_tip:
-	tip_free();
-remove_trusted_mac:
-	remove_proc_entry("trusted_mac", proc);
-remove_trusted_ip:	
-	remove_proc_entry("trusted_ip", proc);
+	tip_free(proc);
 remove_config:	
 	remove_proc_entry("config", proc);
 remove:
@@ -325,14 +307,12 @@ remove:
 
 static void __exit wifidog_exit(void)
 {
-	remove_proc_entry("trusted_mac", proc);
-	remove_proc_entry("trusted_ip", proc);
+	tip_free(proc);
+	tmac_free(proc);
+	
 	remove_proc_entry("config", proc);
 	remove_proc_entry("wifidog", NULL);
 	nf_unregister_hook(&wifidog_ops);
-	
-	tip_free();
-	tmac_free();
 	
 	pr_info("kmod of wifidog is stop\n");
 }

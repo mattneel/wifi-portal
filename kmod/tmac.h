@@ -18,17 +18,14 @@
 #include <linux/types.h>
 #include <linux/if_ether.h>
 
-struct tmac_entry
-{
+struct tmac_entry {
 	struct hlist_node	hlist;
 	u8 addr[ETH_ALEN];
 	unsigned long j;
 };
 
-extern const struct file_operations proc_trusted_mac_ops;
-
-int tmac_init(void);
-void tmac_free(void);
+int tmac_init(struct proc_dir_entry *proc);
+void tmac_free(struct proc_dir_entry *proc);
 int add_tmac(u8 *addr);
 int trusted_mac(u8 *addr);
 

@@ -254,8 +254,9 @@ const struct file_operations proc_trusted_mac_ops = {
 	.release 	= seq_release
 };
 
-int tmac_init(void)
+int tmac_init(struct proc_dir_entry *proc)
 {
+	int ret;
 	int i = 0;
 	
 	tmac_cache = kmem_cache_create("tmac_cache", sizeof(struct tmac_entry), 0, 0, NULL);
@@ -267,11 +268,22 @@ int tmac_init(void)
 	for (i = 0; i < TMAC_HASH_SIZE; i++)
 		INIT_HLIST_HEAD(&tmac_hash_table[i]);
 
+	if (!proc_create("trusted_mac", 0644, proc, &proc_trusted_mac_ops)) {
+		pr_err("can't create file /proc/wifidog/trusted_mac\n");
+		ret = -EINVAL;
+		goto free_cache;
+	}
+
 	return 0;
+
+free_cache:
+	kmem_cache_destroy(tmac_cache);
+	return ret;
 }
 
-void tmac_free(void)
+void tmac_free(struct proc_dir_entry *proc)
 {
 	tmac_clear();
+	remove_proc_entry("trusted_mac", proc);
 	kmem_cache_destroy(tmac_cache);
 }

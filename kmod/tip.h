@@ -17,16 +17,13 @@
 
 #include <linux/types.h>
 
-struct tip_entry
-{
+struct tip_entry {
 	struct hlist_node	hlist;
 	__be32	addr;
 };
 
-extern const struct file_operations proc_trusted_ip_ops;
-
-int tip_init(void);
-void tip_free(void);
+int tip_init(struct proc_dir_entry *proc);
+void tip_free(struct proc_dir_entry *proc);
 int add_tip(__be32 addr);
 int trusted_ip(__be32 addr);
 

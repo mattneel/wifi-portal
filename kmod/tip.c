@@ -244,8 +244,9 @@ const struct file_operations proc_trusted_ip_ops = {
 	.release 	= seq_release
 };
 
-int tip_init(void)
+int tip_init(struct proc_dir_entry *proc)
 {
+	int ret;
 	int i = 0;
 	
 	tip_cache = kmem_cache_create("tip_cache", sizeof(struct tip_entry), 0, 0, NULL);
@@ -257,11 +258,22 @@ int tip_init(void)
 	for (i = 0; i < TIP_HASH_SIZE; i++)
 		INIT_HLIST_HEAD(&tip_hash_table[i]);
 
+	if (!proc_create("trusted_ip", 0644, proc, &proc_trusted_ip_ops)) {
+		pr_err("can't create file /proc/wifidog/trusted_ip\n");
+		ret = -EINVAL;
+		goto free_cache;
+	}
+	
 	return 0;
+	
+free_cache:
+	kmem_cache_destroy(tip_cache);
+	return ret;
 }
 
-void tip_free(void)
+void tip_free(struct proc_dir_entry *proc)
 {
 	tip_clear();
+	remove_proc_entry("trusted_ip", proc);
 	kmem_cache_destroy(tip_cache);
 }
