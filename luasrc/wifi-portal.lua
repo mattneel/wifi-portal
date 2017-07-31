@@ -53,7 +53,6 @@ local function main()
 	end, ev.SIGINT):start(loop)
 
 	util.update_interface(conf.ifname)
-	util.add_trusted_domain(conf.authserv_host)
 	
 	http.start(mgr)
 	ping.start(mgr, loop)

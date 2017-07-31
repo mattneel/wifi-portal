@@ -87,6 +87,9 @@ local function mark_online()
 
     if before ~= after then
         log.info("ONLINE status became", after and "ON" or "OFF")
+        if after then
+        	util.add_trusted_domain(conf.authserv_host)
+        end
     end
 end
 
