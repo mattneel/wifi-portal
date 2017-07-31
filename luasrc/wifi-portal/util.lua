@@ -1,9 +1,11 @@
 module(..., package.seeall)
 
 local ev = require "ev"
+local log = require "wifi-portal.log"
 local libubus = require "ubus"
 local iwinfo = require "iwinfo"
 
+local mgr
 local loop
 
 local ubus_con = libubus.connect()
@@ -11,7 +13,8 @@ if not ubus_con then
 	error("Failed to connect to ubus")
 end
 
-function init(_loop)
+function init(_mgr, _loop)
+	mgr = _mgr
 	loop = _loop
 end
 
@@ -115,4 +118,19 @@ function update_interface(ifname)
 	local file = io.open("/proc/wifidog/config", "w")
 	file:write("interface=", ifname, "\n")
 	file:close()
+end
+
+local function dns_resolve_cb(ctx, domain, ip, err)
+	if ip then
+		log.info("parsed", domain)
+		for _, v in ipairs(ip) do
+			add_trusted_ip(v)
+		end
+	else
+		log.error("parse failed:", domain, err)
+	end
+end
+
+function add_trusted_domain(domain)
+	mgr:dns_resolve_async(dns_resolve_cb, domain, {max_retries = 1, timeout = 2})
 end

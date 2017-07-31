@@ -39,7 +39,7 @@ local function main()
 	local loop = ev.Loop.default
 	local mgr = evmg.init()
 
-	util.init(loop)
+	util.init(mgr, loop)
 	
 	parse_commandline()
 	conf.parse_conf()
@@ -53,7 +53,7 @@ local function main()
 	end, ev.SIGINT):start(loop)
 
 	util.update_interface(conf.ifname)
-	util.add_trusted_ip(conf.authserv_hostname)
+	util.add_trusted_domain(conf.authserv_host)
 	
 	http.start(mgr)
 	ping.start(mgr, loop)
