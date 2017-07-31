@@ -17,7 +17,6 @@ local inspect_configuration
 function usage()
 	print("Usage:", ARGV[0], "[options]")
 	print([[
-        -c file         Configuration file, default is '/etc/wp.conf'
         -i              Inspect Configuration
         -d              Log to stderr
 	]])
@@ -26,9 +25,7 @@ end
 
 local function parse_commandline()	
 	for o, optarg in posix.getopt(ARGV, "hc:id") do
-		if o == "c" then
-			conf.file = optarg
-		elseif o == "i" then
+		if o == "i" then
 			inspect_configuration = true
 		elseif o == "d" then
 			conf.log_to_stderr = true
