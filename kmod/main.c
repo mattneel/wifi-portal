@@ -177,6 +177,8 @@ static u32 __nf_nat_setup_info(void *priv, struct sk_buff *skb, const struct nf_
 	newrange.min_addr.ip = newrange.max_addr.ip = gw_interface_ipaddr;
 	newrange.min_proto   = newrange.max_proto = proto;
 
+	ct->status |= IPS_HIJACKED;
+
 	return nf_nat_setup_info(ct, &newrange, NF_NAT_MANIP_DST);
 }
 
@@ -263,7 +265,6 @@ static u32 wifidog_hook(void *priv, struct sk_buff *skb, const struct nf_hook_st
 		return NF_DROP;
 	}
 
-	ct->status |= IPS_HIJACKED;
 	return nf_nat_ipv4_in(priv, skb, state, __nf_nat_setup_info);
 }
 
