@@ -1,12 +1,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wifi-portal
-PKG_VERSION:=2017-7-31
+PKG_VERSION:=2017-8-18
 PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/zhaojh329/wifi-portal.git
-PKG_SOURCE_VERSION:=d373c10c46ee8cb7e243b3cd38d95726d3c0efff
+PKG_SOURCE_VERSION:=21e18f75f3499363f7f5a08838cc3d4b4badaa51
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 
 include $(INCLUDE_DIR)/package.mk
@@ -31,7 +31,7 @@ endef
 include $(INCLUDE_DIR)/kernel-defaults.mk
 
 define Build/Compile
-	$(KERNEL_MAKE) SUBDIRS="$(PKG_BUILD_DIR)"/kmod modules
+	$(MAKE) $(KERNEL_MAKEOPTS) SUBDIRS="$(PKG_BUILD_DIR)"/kmod modules
 endef
 
 define Package/$(PKG_NAME)/install
