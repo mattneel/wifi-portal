@@ -1,12 +1,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wifi-portal
-PKG_VERSION:=2017-8-18
+PKG_VERSION:=2017-8-22
 PKG_RELEASE=$(PKG_SOURCE_VERSION)
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/zhaojh329/wifi-portal.git
-PKG_SOURCE_VERSION:=21e18f75f3499363f7f5a08838cc3d4b4badaa51
+PKG_SOURCE_VERSION:=9b8beaa471dc07bbec50ab8cac257fd93f7672b6
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 
 include $(INCLUDE_DIR)/package.mk
