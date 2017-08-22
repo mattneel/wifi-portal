@@ -16,7 +16,7 @@ define Package/$(PKG_NAME)
   SUBMENU:=Captive Portals
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+evmongoose-lua +libiwinfo-lua +libuci-lua +kmod-wifi-portal
+  DEPENDS:=+evmongoose-lua +libiwinfo-lua +libuci-lua +kmod-wifi-portal +lua-cjson
   TITLE:=A very efficient captive portal solution
 endef
 
