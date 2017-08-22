@@ -33,7 +33,7 @@ authserv_offline = true
 checkinterval = 60
 clienttimeout = 5	-- 5 * 60s = 300s
 
-wlan_ifname = "ra0"
+wlan_ifname = "wlan0"
 
 popular_server = {"www.baidu.com", "qq.com"}
 
