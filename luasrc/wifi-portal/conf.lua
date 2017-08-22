@@ -119,7 +119,7 @@ function parse_conf()
 	authserv_ping_url = string.format("%s%s?gw_id=%s&sys_uptime=%%s&sys_memfree=%%s&sys_load=%%s&wifidog_uptime=%%s",
 			authserv_url, authserv_ping_path_fragment, gw_id)
 			
-	authserv_login_url = string.format("%s%s?gw_address=%s&gw_port=%s&bssid=%sip=%%s&mac=%%s&ssid=%%s",
+	authserv_login_url = string.format("%s%s?gw_address=%s&gw_port=%s&bssid=%s&ip=%%s&mac=%%s&ssid=%%s",
 			authserv_url, authserv_login_path_fragment, gw_address, gw_port, util.get_bssid(wlan_ifname))
 			
 	authserv_auth_url = string.format("%s%s?stage=%%s&gw_id=%sip=%%s&mac=%%s&token=%%s&incoming=%%s&outgoing=%%s",
