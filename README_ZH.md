@@ -40,6 +40,12 @@ WiFi-Portal是一个使用Lua语言编写的非常高效的portal认证解决方
 	./scripts/feeds install -a
 	
 	make menuconfig
+	Libraries  --->
+		Networking  --->
+			-*- evmongoose
+				Configuration  --->
+					[*] Enable HTTP gzip module
+					Selected SSL library (OpenSSL)  --->
 	Network  --->
 		Captive Portals  --->
 			<*> wifi-portal

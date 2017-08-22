@@ -42,6 +42,12 @@ authentication management instead of using iptables to create firewall rules.
 	./scripts/feeds install -a
 	
 	make menuconfig
+	Libraries  --->
+		Networking  --->
+			-*- evmongoose
+				Configuration  --->
+					[*] Enable HTTP gzip module
+					Selected SSL library (OpenSSL)  --->
 	Network  --->
 		Captive Portals  --->
 			<*> wifi-portal
